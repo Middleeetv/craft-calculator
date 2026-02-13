@@ -306,6 +306,8 @@
       <label class="chip"><input id="showOnlyFav" type="checkbox" /> お気に入りだけ</label>
       <label class="chip"><input id="showOnlyEntered" type="checkbox" /> 入力中だけ表示</label>
       <label class="chip"><input id="pinEntered" type="checkbox" checked /> 入力済みを上へ</label>
+      <button id="resetBtn" class="chip" type="button">入力リセット</button>
+
     </div>
 
     <div class="content">
@@ -620,6 +622,8 @@ const searchBox = $("searchBox");
 const showOnlyFav = $("showOnlyFav");
 const showOnlyEntered = $("showOnlyEntered");
 const pinEntered = $("pinEntered");
+const resetBtn = $("resetBtn");
+
 
 const totalYenEl = $("totalYen");
 const yenBreakdownEl = $("yenBreakdown");
@@ -1022,6 +1026,18 @@ if (searchBox) searchBox.addEventListener("input", () => renderItems());
 if (showOnlyFav) showOnlyFav.addEventListener("change", () => renderItems());
 if (showOnlyEntered) showOnlyEntered.addEventListener("change", () => renderItems());
 if (pinEntered) pinEntered.addEventListener("change", () => renderItems());
+if (resetBtn) {
+  resetBtn.addEventListener("click", () => {
+    if (!confirm("入力をすべてリセットしますか？")) return;
+
+    for (const k of Object.keys(counts)) {
+      counts[k] = 0;
+    }
+
+    renderItems();
+  });
+}
+
 
 /* =======================
    初期表示
