@@ -172,7 +172,6 @@
       border-color: rgba(255,204,102,.30);
     }
 
-    /* ★追加：アイコン */
     .icon{
       width:56px;
       height:56px;
@@ -241,7 +240,6 @@
       font-size:13px;
     }
     .kv:last-child{border-bottom:0;}
-    .kv b{font-size:14px;}
     .yen{color:var(--warn); font-weight:800;}
     .muted{color:var(--muted); font-size:12px;}
 
@@ -292,7 +290,7 @@
 <body>
 <header>
   <h1>クラフト素材計算</h1>
-  <p class="sub">カテゴリ→アイテム選択→個数入力。必要素材と料金をまとめて出します。</p>
+  <p class="sub">カテゴリ→アイテム選択→回数入力。必要素材と料金、スーパー購入コストをまとめて出します。</p>
 </header>
 
 <div class="wrap">
@@ -312,7 +310,7 @@
 
     <div class="content">
       <div id="items" class="list"></div>
-      <div class="hint">※ 数値は「作成回数」です（yieldがあるものは出来上がり数が変わります）</div>
+      <div class="hint">※ 数値は「クラフト回数」です（出来上がり数は yield 反映）</div>
     </div>
   </div>
 
@@ -322,11 +320,24 @@
       <span>結果</span>
       <span class="muted" id="resultNote"></span>
     </h2>
+
     <div class="content">
       <div class="box">
-        <div class="secTitle">料金合計</div>
+        <div class="secTitle">料金合計（クラフト料金）</div>
         <div class="kv"><span>合計</span><b class="yen" id="totalYen">0円</b></div>
         <div class="muted" id="yenBreakdown"></div>
+      </div>
+
+      <div class="box">
+        <div class="secTitle">スーパー購入合計</div>
+
+        <div class="kv"><span>材料を全部買う場合</span><b class="yen" id="shopMatsTotal">0円</b></div>
+        <div class="muted" id="shopMatsBreakdown"></div>
+
+        <div style="height:10px;"></div>
+
+        <div class="kv"><span>入力した完成品を買う場合</span><b class="yen" id="shopItemsTotal">0円</b></div>
+        <div class="muted" id="shopItemsBreakdown"></div>
       </div>
 
       <div class="box">
@@ -335,7 +346,7 @@
       </div>
 
       <details id="altDetails">
-        <summary>代替レシピ（両方表示＋合計には自動で安い方を採用）</summary>
+        <summary>代替レシピ（手動で選択できます）</summary>
         <div id="altBreakdowns"></div>
       </details>
     </div>
@@ -344,7 +355,7 @@
 
 <script>
 /* =======================
-   データ（4カテゴリ）
+   データ
 ======================= */
 const CATEGORIES = [
   "違法物クラフト台",
@@ -353,24 +364,23 @@ const CATEGORIES = [
   "薬物製造台"
 ];
 
-// レシピ（材料）
 const RECIPES = {
   // 違法物クラフト台
   "犯罪用小型C4爆弾": { "アルミ粉": 1 },
   "小型サーマルドリル": { "ダイヤモンドドリルビット": 2 },
   "犯罪用小型テルミット爆弾": { "アルミ粉": 1 },
   "小型バッグ": { "布": 20, "小型ロープ": 3 },
-  "貴金属": { }, // 代替レシピで展開表示
+  "貴金属": { }, // ALTで展開
   "小型ドリル": { "ダイヤモンドドリルビット": 1 },
   "手錠の鍵": { "鉄のインゴット": 3 },
   "ビジネスバッグ用ロックピッカー": { "鉄のインゴット": 3 },
   "犯罪用USBメモリ 1.0": { "電子キット": 1 },
   "ロックピック": { "鉄のインゴット": 1 },
-  "電子キット": { "貴金属": 1, "銅のインゴット": 1 }, // 代替レシピもあり
+  "電子キット": { "貴金属": 1, "銅のインゴット": 1 }, // ALTもあり
   "犯罪用ノートパソコングレード1": { "電子キット": 1 },
   "小型グラインダー": { "メタルブレード": 1 },
 
-  // ガンスミスワークベンチ
+  // ガンスミス
   "フラッシュバン": { "メテオライトインゴット": 1, "銅のインゴット": 1, "鋼鉄のインゴット": 1 },
   "ポータブルEMPデバイス": { "銅のインゴット": 2, "鋼鉄のインゴット": 1, "電子キット": 1 },
   "グレネード": { "銅のインゴット": 1, "鋼鉄のインゴット": 1 },
@@ -387,7 +397,7 @@ const RECIPES = {
   // 化学作業台
   "バックパックLv2": { "布": 5, "小型バッグ": 10 },
   "化学薬品クラフトテーブル": { "アサルトライフルボディ": 20, "ダイヤモンド": 50 },
-  "油": { }, // 代替レシピで展開表示
+  "油": { }, // ALT
   "メタルブレード": { "鉄のインゴット": 1, "鋼鉄のインゴット": 1 },
   "医療キット": { "布": 1, "ライム": 1, "鋼鉄のインゴット": 1 },
   "鉄の歯車": { "鉄のインゴット": 2, "鋼鉄のインゴット": 1 },
@@ -399,11 +409,11 @@ const RECIPES = {
   "ダッフルバッグ": { "布": 10, "エメラルド": 80, "小型バッグ": 30, "小型ロープ": 10 },
   "電子機器クラフトテーブル": { "アサルトライフルボディ": 20, "ダイヤモンド": 50 },
   "ダイヤモンド": { "未加工ダイヤモンド": 5 }, // yield 5
-  "金属接合剤": { "ダイヤモンド": 30 }, // cost 5000
+  "金属接合剤": { "ダイヤモンド": 30 },
   "包帯": { "布": 1 },
-  "SMGボディ": { }, // 代替レシピで展開表示（2通り）
+  "SMGボディ": { }, // ALT
   "ボイステープ": { "電子キット": 1 },
-  "ピストルボディ": { "カーボンファイバー": 25 }, // cost 100000
+  "ピストルボディ": { "カーボンファイバー": 25 },
   "グラスファイバー": { "ガラス": 1 },
   "武器クラフトテーブル": { "アサルトボディ": 20, "ダイヤモンド": 50 },
   "サボテンクリーム": { "サボテンの果実": 1 },
@@ -417,7 +427,6 @@ const RECIPES = {
   "【麻薬】ホワイトマッド": { "ホワイトフラワー": 1, "銀のインゴット": 1 }
 };
 
-// 画像マッピング（未登録は画像なしで表示）
 const IMAGE_MAP = {
   "犯罪用小型C4爆弾": "c4_small.png",
   "小型サーマルドリル": "thermal_drill_small.png",
@@ -475,16 +484,14 @@ const IMAGE_MAP = {
   "【麻薬】ブルーアウト": "drug_blueout.png",
   "【麻薬】レッドスペクター": "drug_redspecter.png",
   "【麻薬】ホワイトマッド": "drug_whitemud.png"
-
 };
 
 function getImagePath(itemName) {
-  const map = IMAGE_MAP[itemName];
-  if (!map) return null;
-  return `images/${map}`;
+  const file = IMAGE_MAP[itemName];
+  if (!file) return null;
+  return `images/${file}`;
 }
 
-// 代替レシピ（結果に複数表示する用）
 const ALT_RECIPES = {
   "貴金属": [
     { name: "金のインゴットで作る", recipe: { "金のインゴット": 2 }, yield: 1, costYen: 0 },
@@ -504,7 +511,6 @@ const ALT_RECIPES = {
   ],
 };
 
-// カテゴリ / 料金 / 出来上がり数（yield）
 const META = {
   // 違法物クラフト台
   "犯罪用小型C4爆弾": { category: "違法物クラフト台", costYen: 1000, yield: 1 },
@@ -552,7 +558,7 @@ const META = {
   "ダイヤモンド": { category: "化学作業台", costYen: 0, yield: 5 },
   "金属接合剤": { category: "化学作業台", costYen: 5000, yield: 1 },
   "包帯": { category: "化学作業台", costYen: 0, yield: 1 },
-  "SMGボディ": { category: "化学作業台", costYen: 0, yield: 1 }, // costは代替レシピ側
+  "SMGボディ": { category: "化学作業台", costYen: 0, yield: 1 },
   "ボイステープ": { category: "化学作業台", costYen: 0, yield: 1 },
   "ピストルボディ": { category: "化学作業台", costYen: 100000, yield: 1 },
   "グラスファイバー": { category: "化学作業台", costYen: 0, yield: 1 },
@@ -568,27 +574,63 @@ const META = {
   "【麻薬】ホワイトマッド": { category: "薬物製造台", costYen: 0, yield: 1 }
 };
 
+// スーパー購入価格（1個あたり）
+const SHOP_PRICE = {
+  "アルミ粉": 10000,
+  "エメラルド": 10000,
+  "サファイア": 10000,
+  "ダイヤモンド": 10000,
+
+  "メテオライトインゴット": 2000,
+  "金のインゴット": 10000,
+  "銀のインゴット": 10000,
+
+  "鉄のインゴット": 2000,
+  "銅のインゴット": 10000,
+  "鋼鉄のインゴット": 10000,
+
+  "小型グラインダー": 200000,
+  "小型サーマルドリル": 200000,
+  "小型ドリル": 200000,
+
+  "小型バッグ": 200000,
+  "小型ロープ": 200000,
+};
+
 /* =======================
    状態
 ======================= */
 let currentCategory = "違法物クラフト台";
-const counts = {};        // itemName -> craftTimes
+const counts = {};          // itemName -> craftTimes
 const favorites = new Set();
+const altChoice = {};       // altChoice["貴金属"]=0 など
 
-const categorySeg = document.getElementById("categorySeg");
-const itemsEl = document.getElementById("items");
-const matsEl  = document.getElementById("materials");
-const altEl   = document.getElementById("altBreakdowns");
+/* =======================
+   DOM
+   ※ null対策：必ず存在チェックしてから使う
+======================= */
+const $ = (id) => document.getElementById(id);
 
-const searchBox = document.getElementById("searchBox");
-const showOnlyFav = document.getElementById("showOnlyFav");
-const showOnlyEntered = document.getElementById("showOnlyEntered");
-const pinEntered = document.getElementById("pinEntered");
+const categorySeg = $("categorySeg");
+const itemsEl = $("items");
+const matsEl  = $("materials");
+const altEl   = $("altBreakdowns");
 
-const totalYenEl = document.getElementById("totalYen");
-const yenBreakdownEl = document.getElementById("yenBreakdown");
-const resultNote = document.getElementById("resultNote");
-const altDetails = document.getElementById("altDetails");
+const searchBox = $("searchBox");
+const showOnlyFav = $("showOnlyFav");
+const showOnlyEntered = $("showOnlyEntered");
+const pinEntered = $("pinEntered");
+
+const totalYenEl = $("totalYen");
+const yenBreakdownEl = $("yenBreakdown");
+const resultNote = $("resultNote");
+
+const shopMatsTotalEl = $("shopMatsTotal");
+const shopMatsBreakdownEl = $("shopMatsBreakdown");
+const shopItemsTotalEl = $("shopItemsTotal");
+const shopItemsBreakdownEl = $("shopItemsBreakdown");
+
+const altDetails = $("altDetails");
 
 /* =======================
    ユーティリティ
@@ -603,21 +645,20 @@ function getCost(itemName){
   const c = META[itemName]?.costYen;
   return Number.isFinite(c) && c >= 0 ? c : 0;
 }
-
 function itemsByCategory(cat){
   return Object.keys(META).filter(k => META[k]?.category === cat);
 }
-
 function passesFilters(name){
-  const q = (searchBox.value || "").trim().toLowerCase();
+  const q = (searchBox?.value || "").trim().toLowerCase();
   if (q && !name.toLowerCase().includes(q)) return false;
-  if (showOnlyFav.checked && !favorites.has(name)) return false;
-  if (showOnlyEntered.checked && (counts[name]||0) <= 0) return false;
+  if (showOnlyFav?.checked && !favorites.has(name)) return false;
+  if (showOnlyEntered?.checked && (counts[name]||0) <= 0) return false;
   return true;
 }
 
 /* =======================
-   計算：素材合計 + 料金合計（基本）
+   計算：素材合計 + クラフト料金合計（基本）
+   - ALT対象は「必要個数」として totals に入れるだけ
 ======================= */
 function computeBaseTotalsAndCost(){
   const totals = {};
@@ -632,10 +673,10 @@ function computeBaseTotalsAndCost(){
     cost += itemCost;
     costBreakdown.push({ name:itemName, yen:itemCost });
 
-    // ★ここに追加
+    // ALTアイテムは「欲しい個数」として扱う（材料展開はALT側）
     if (ALT_RECIPES[itemName]) {
-      const produced = t * getYield(itemName);
-      totals[itemName] = (totals[itemName] || 0) + produced;
+      totals[itemName] = (totals[itemName] || 0) + t;
+      continue;
     }
 
     const recipe = RECIPES[itemName];
@@ -650,21 +691,22 @@ function computeBaseTotalsAndCost(){
 }
 
 /* =======================
-   代替レシピの展開
-   - 両方表示
-   - 合計に加算するのは「安い方」(tie:先頭)
+   代替レシピの展開（手動選択）
+   - totals[altItem] を必要数として、選択レシピの材料を加算
 ======================= */
 function buildAltBreakdowns(totals){
   const breakdowns = [];
   let chosenCostAdd = 0;
   const chosenCostBreakdown = [];
-  const chosenMatsAdd = {}; // 合計に加算する材料（選ばれた方）
+  const chosenMatsAdd = {};
 
   for (const [altItem, options] of Object.entries(ALT_RECIPES)) {
     const need = totals[altItem] || 0;
     if (need <= 0) continue;
 
-    const optionResults = options.map(opt => {
+    if (altChoice[altItem] == null) altChoice[altItem] = 0;
+
+    const optionResults = options.map((opt, idx) => {
       const y = opt.yield || 1;
       const craftTimes = Math.ceil(need / y);
 
@@ -672,41 +714,96 @@ function buildAltBreakdowns(totals){
       for (const [mat, per] of Object.entries(opt.recipe)) {
         mats[mat] = per * craftTimes;
       }
-
       const costYen = (opt.costYen || 0) * craftTimes;
 
-      return {
-        name: opt.name,
-        need, yield: y, craftTimes,
-        mats, costYen
-      };
+      return { idx, name: opt.name, need, yield:y, craftTimes, mats, costYen };
     });
 
-    // 合計に入れる候補（最安）
-    let chosen = optionResults[0];
-    for (const r of optionResults) {
-      if (r.costYen < chosen.costYen) chosen = r;
+    let chosenIndex = altChoice[altItem];
+    if (!Number.isFinite(chosenIndex) || chosenIndex < 0 || chosenIndex >= optionResults.length) {
+      chosenIndex = 0;
+      altChoice[altItem] = 0;
     }
+    const chosen = optionResults[chosenIndex];
 
-    // 合計に加算（料金）
     chosenCostAdd += chosen.costYen;
-    chosenCostBreakdown.push({ name: `${altItem}（代替採用：${chosen.name}）`, yen: chosen.costYen });
+    chosenCostBreakdown.push({ name: `${altItem}（採用：${chosen.name}）`, yen: chosen.costYen });
 
-    // 合計に加算（材料）
     for (const [mat, v] of Object.entries(chosen.mats)) {
       chosenMatsAdd[mat] = (chosenMatsAdd[mat] || 0) + v;
     }
 
-    breakdowns.push({ item: altItem, need, options: optionResults, chosenName: chosen.name });
+    breakdowns.push({ item: altItem, need, options: optionResults, chosenIndex });
   }
 
   return { breakdowns, chosenCostAdd, chosenCostBreakdown, chosenMatsAdd };
 }
 
 /* =======================
+   スーパー購入計算
+======================= */
+// 必要素材 totals から「買える素材」だけ合計
+function calcShopCostFromTotals(totals){
+  let sum = 0;
+  const lines = [];
+  const missing = [];
+
+  for (const [name, qty] of Object.entries(totals)) {
+    const q = qty || 0;
+    if (q <= 0) continue;
+    if (SHOP_PRICE[name] != null) {
+      const yen = SHOP_PRICE[name] * q;
+      sum += yen;
+      lines.push({ name, yen });
+    } else {
+      missing.push(name);
+    }
+  }
+
+  lines.sort((a,b)=> b.yen - a.yen);
+  return { sum, lines, missing };
+}
+
+// 入力した「完成品そのもの」をスーパーで買えるか合計
+function calcShopCostFromEnteredItems(){
+  let sum = 0;
+  const lines = [];
+  const missing = [];
+
+  for (const [itemName, craftTimes] of Object.entries(counts)) {
+    const t = craftTimes || 0;
+    if (t <= 0) continue;
+
+    // 完成品購入は「出来上がり数」ベースにしたいなら produced を使う
+    // 今回は「入力回数＝欲しい個数」運用っぽいので t をそのまま個数扱い
+    const qty = t;
+
+    if (SHOP_PRICE[itemName] != null) {
+      const yen = SHOP_PRICE[itemName] * qty;
+      sum += yen;
+      lines.push({ name: itemName, yen });
+    } else {
+      missing.push(itemName);
+    }
+  }
+
+  lines.sort((a,b)=> b.yen - a.yen);
+  return { sum, lines, missing };
+}
+
+/* =======================
+   代替選択ハンドラ（グローバル）
+======================= */
+window.handleAltChoiceChange = function(altItem, idx){
+  altChoice[altItem] = idx;
+  renderResults();
+};
+
+/* =======================
    レンダリング
 ======================= */
 function renderCategorySeg(){
+  if (!categorySeg) return;
   categorySeg.innerHTML = "";
   for (const cat of CATEGORIES) {
     const b = document.createElement("button");
@@ -722,15 +819,15 @@ function renderCategorySeg(){
 }
 
 function renderItems(){
+  if (!itemsEl) return;
   itemsEl.innerHTML = "";
 
   let list = itemsByCategory(currentCategory).filter(passesFilters);
 
-  // 並び順：入力済み上 / お気に入り上 / あとは名前順
   list.sort((a,b)=>{
     const aEntered = (counts[a]||0) > 0;
     const bEntered = (counts[b]||0) > 0;
-    if (pinEntered.checked && aEntered !== bEntered) return aEntered ? -1 : 1;
+    if (pinEntered?.checked && aEntered !== bEntered) return aEntered ? -1 : 1;
 
     const aFav = favorites.has(a);
     const bFav = favorites.has(b);
@@ -750,8 +847,7 @@ function renderItems(){
     row.className = "row";
 
     const craftTimes = counts[itemName] ?? 0;
-    const entered = craftTimes > 0;
-    if (entered) row.classList.add("entered");
+    if (craftTimes > 0) row.classList.add("entered");
 
     const left = document.createElement("div");
     left.className = "name";
@@ -780,7 +876,6 @@ function renderItems(){
       </div>
     `;
 
-    // ★ここが「画像を挟む」完全版
     left.appendChild(star);
 
     const imgPath = getImagePath(itemName);
@@ -791,7 +886,6 @@ function renderItems(){
       img.alt = itemName;
       img.loading = "lazy";
       img.decoding = "async";
-      // 画像が無い/壊れてる時は消す
       img.addEventListener("error", () => img.remove());
       left.appendChild(img);
     }
@@ -807,7 +901,6 @@ function renderItems(){
     input.addEventListener("input", () => {
       const v = Math.floor(Number(input.value || 0));
       counts[itemName] = Math.max(0, v);
-      // 入力したら、その行がわかるように即反映
       renderItems();
     });
 
@@ -821,89 +914,114 @@ function renderItems(){
 
 function renderResults(){
   const { totals: baseTotals, cost: baseCost, costBreakdown: baseBreak } = computeBaseTotalsAndCost();
-
-　// ★ここに追加する
-  for (const [itemName, craftTimes] of Object.entries(counts)) {
-    if ((craftTimes || 0) > 0 && ALT_RECIPES[itemName]) {
-      const y = getYield(itemName);
-      const produced = craftTimes * y;
-      baseTotals[itemName] = (baseTotals[itemName] || 0) + produced;
-    }
-  }
   const { breakdowns, chosenCostAdd, chosenCostBreakdown, chosenMatsAdd } = buildAltBreakdowns(baseTotals);
 
-  // 合計に「代替採用の材料」を加算した最終素材
+  // 最終素材（base + 代替採用材料）
   const totals = { ...baseTotals };
   for (const [k,v] of Object.entries(chosenMatsAdd)) {
     totals[k] = (totals[k] || 0) + v;
   }
-
-  // 代替アイテム自身（貴金属など）が素材一覧に残るのが邪魔なので、表示からは消す（内訳で見えるため）
+  // ALTアイテム自身は素材一覧から消す（代替欄で見える）
   for (const altItem of Object.keys(ALT_RECIPES)) {
     if (totals[altItem]) delete totals[altItem];
   }
 
-  // 料金合計（ベース + 代替採用分）
+  // クラフト料金合計
   const totalCost = baseCost + chosenCostAdd;
+  if (totalYenEl) totalYenEl.textContent = `${fmtYen(totalCost)}円`;
 
-  // 表示
-  totalYenEl.textContent = `${fmtYen(totalCost)}円`;
+  // クラフト料金内訳
+  const mergedBreak = [...baseBreak, ...chosenCostBreakdown].sort((a,b)=> b.yen - a.yen);
+  if (yenBreakdownEl) {
+    yenBreakdownEl.innerHTML = mergedBreak.length
+      ? mergedBreak.map(x => `・${x.name}：<b>${fmtYen(x.yen)}円</b>`).join("<br>")
+      : "・（まだ入力がありません）";
+  }
 
-  // 料金内訳（0円も出す）
-  const mergedBreak = [...baseBreak, ...chosenCostBreakdown]
-    .sort((a,b)=> b.yen - a.yen);
+  // スーパー（材料）
+  const matsShop = calcShopCostFromTotals(totals);
+  if (shopMatsTotalEl) shopMatsTotalEl.textContent = `${fmtYen(matsShop.sum)}円`;
+  if (shopMatsBreakdownEl) {
+    const s1 = matsShop.lines.length
+      ? matsShop.lines.map(x => `・${x.name}：<b>${fmtYen(x.yen)}円</b>`).join("<br>")
+      : "・（スーパー購入対象なし）";
+    shopMatsBreakdownEl.innerHTML = s1;
+  }
 
-  yenBreakdownEl.innerHTML = mergedBreak.length
-    ? mergedBreak.map(x => `・${x.name}：<b>${fmtYen(x.yen)}円</b>`).join("<br>")
-    : "・（まだ入力がありません）";
+  // スーパー（完成品）
+  const itemsShop = calcShopCostFromEnteredItems();
+  if (shopItemsTotalEl) shopItemsTotalEl.textContent = `${fmtYen(itemsShop.sum)}円`;
+  if (shopItemsBreakdownEl) {
+    const s2 = itemsShop.lines.length
+      ? itemsShop.lines.map(x => `・${x.name}：<b>${fmtYen(x.yen)}円</b>`).join("<br>")
+      : "・（スーパー購入対象なし）";
+    shopItemsBreakdownEl.innerHTML = s2;
+  }
 
-  // 素材合計
+  // 必要素材（合計）
   const entries = Object.entries(totals).sort((a,b)=> b[1]-a[1]);
-  matsEl.innerHTML = entries.length
-    ? entries.map(([k,v]) => `<div class="kv"><span>${k}</span><b>${v}</b></div>`).join("")
-    : `<div class="muted">まだ入力がありません</div>`;
+  if (matsEl) {
+    matsEl.innerHTML = entries.length
+      ? entries.map(([k,v]) => `<div class="kv"><span>${k}</span><b>${v}</b></div>`).join("")
+      : `<div class="muted">まだ入力がありません</div>`;
+  }
 
-  // 代替レシピ表示
-  if (breakdowns.length) {
-    altDetails.open = true;
-    altEl.innerHTML = breakdowns.map(b => {
-      const opts = b.options.map(opt => {
-        const mats = Object.entries(opt.mats).map(([k,v]) => `<li>${k}: <b>${v}</b></li>`).join("");
+  // 代替レシピ表示（手動選択）
+  if (altDetails && altEl) {
+    if (breakdowns.length) {
+      altDetails.open = true;
+      altEl.innerHTML = breakdowns.map(b => {
+        const opts = b.options.map(opt => {
+          const mats = Object.entries(opt.mats)
+            .map(([k,v]) => `<li>${k}: <b>${v}</b></li>`)
+            .join("");
+
+          const checked = (opt.idx === b.chosenIndex) ? "checked" : "";
+          return `
+            <label class="opt" style="display:block;">
+              <div style="display:flex; gap:10px; align-items:flex-start;">
+                <input type="radio"
+                       name="alt_${b.item}"
+                       value="${opt.idx}"
+                       ${checked}
+                       onchange="handleAltChoiceChange('${b.item}', ${opt.idx})" />
+                <div style="flex:1;">
+                  <div><b>${opt.name}</b></div>
+                  <div class="muted">${opt.yield}個/回 → ${opt.craftTimes}回クラフト（必要数 ${b.need}）</div>
+                  <ul>${mats}</ul>
+                  <div class="muted">この選択の料金：<b>${fmtYen(opt.costYen)}円</b></div>
+                </div>
+              </div>
+            </label>
+          `;
+        }).join("");
+
         return `
-          <div class="opt">
-            <div><b>${opt.name}</b></div>
-            <div class="muted">${opt.yield}個/回 → ${opt.craftTimes}回クラフト（必要数 ${b.need}）</div>
-            <ul>${mats}</ul>
-            <div class="muted">この選択の料金：<b>${fmtYen(opt.costYen)}円</b></div>
+          <div class="box">
+            <div><b>${b.item}</b>（必要数：${b.need}）</div>
+            <div class="muted">※ ラジオで採用レシピを選べます（合計は選択した方で計算）</div>
+            ${opts}
           </div>
         `;
       }).join("");
-
-      return `
-        <div class="box">
-          <div><b>${b.item}</b>（必要数：${b.need}）</div>
-          <div class="muted">※ 合計には「${b.chosenName}」を自動採用</div>
-          ${opts}
-        </div>
-      `;
-    }).join("");
-  } else {
-    altDetails.open = false;
-    altEl.innerHTML = `<div class="muted">（代替レシピ対象の素材が、今は必要ありません）</div>`;
+    } else {
+      altDetails.open = false;
+      altEl.innerHTML = `<div class="muted">（代替レシピ対象の素材が、今は必要ありません）</div>`;
+    }
   }
 
-  // 右上の注釈
+  // 右上メモ
   const enteredCount = Object.values(counts).filter(v => (v||0) > 0).length;
-  resultNote.textContent = enteredCount ? `入力中：${enteredCount}件` : "";
+  if (resultNote) resultNote.textContent = enteredCount ? `入力中：${enteredCount}件` : "";
 }
 
 /* =======================
    イベント
 ======================= */
-searchBox.addEventListener("input", () => renderItems());
-showOnlyFav.addEventListener("change", () => renderItems());
-showOnlyEntered.addEventListener("change", () => renderItems());
-pinEntered.addEventListener("change", () => renderItems());
+if (searchBox) searchBox.addEventListener("input", () => renderItems());
+if (showOnlyFav) showOnlyFav.addEventListener("change", () => renderItems());
+if (showOnlyEntered) showOnlyEntered.addEventListener("change", () => renderItems());
+if (pinEntered) pinEntered.addEventListener("change", () => renderItems());
 
 /* =======================
    初期表示
@@ -913,6 +1031,3 @@ renderItems();
 </script>
 </body>
 </html>
-
-
-
