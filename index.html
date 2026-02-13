@@ -1,0 +1,900 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>クラフト素材計算</title>
+  <style>
+    :root{
+      --bg:#0b0f14;
+      --card:#121826;
+      --card2:#0f1521;
+      --text:#e7eefc;
+      --muted:#9fb0d0;
+      --line:rgba(255,255,255,.10);
+      --accent:#6ea8fe;
+      --good:#37d67a;
+      --warn:#ffcc66;
+      --chip:rgba(110,168,254,.14);
+      --shadow: 0 12px 40px rgba(0,0,0,.35);
+      --radius:16px;
+    }
+    *{box-sizing:border-box;}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans JP", sans-serif;
+      background: radial-gradient(1200px 700px at 20% -10%, rgba(110,168,254,.18), transparent 60%),
+                  radial-gradient(900px 600px at 110% 20%, rgba(55,214,122,.10), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+    }
+    header{
+      padding:20px 20px 10px;
+      border-bottom:1px solid var(--line);
+      position:sticky; top:0; background:rgba(11,15,20,.86); backdrop-filter: blur(10px);
+      z-index:10;
+    }
+    h1{margin:0 0 6px; font-size:20px;}
+    .sub{color:var(--muted); font-size:12px; margin:0;}
+
+    .wrap{
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap:16px;
+      padding:16px;
+      max-width:1200px;
+      margin:0 auto;
+    }
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,.03), transparent 60%), var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card h2{
+      margin:0;
+      padding:14px 14px 10px;
+      font-size:14px;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .card .content{padding:14px;}
+
+    .toolbar{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      padding:14px;
+      border-bottom:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(255,255,255,.02), transparent 70%), var(--card2);
+    }
+    .seg{
+      display:flex;
+      background:rgba(255,255,255,.04);
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:4px;
+      gap:4px;
+      overflow:auto;
+    }
+    .seg button{
+      border:0;
+      background:transparent;
+      color:var(--muted);
+      padding:8px 12px;
+      border-radius:999px;
+      cursor:pointer;
+      white-space:nowrap;
+      font-size:12px;
+    }
+    .seg button.active{
+      background:rgba(110,168,254,.18);
+      color:var(--text);
+      outline:1px solid rgba(110,168,254,.35);
+    }
+
+    .search{
+      flex:1;
+      min-width:180px;
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+    .search input{
+      width:100%;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background:rgba(0,0,0,.25);
+      color:var(--text);
+      outline:none;
+    }
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:8px 10px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+      color:var(--muted);
+      font-size:12px;
+      user-select:none;
+    }
+    .chip input{transform: translateY(1px);}
+
+    .list{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    .row{
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:10px 10px;
+      background:rgba(255,255,255,.02);
+      display:grid;
+      grid-template-columns: 1fr 140px;
+      gap:10px;
+      align-items:center;
+      transition:.15s ease;
+    }
+    .row:hover{transform: translateY(-1px); background:rgba(255,255,255,.03);}
+    .row.entered{
+      background:rgba(55,214,122,.10);
+      border-color: rgba(55,214,122,.35);
+    }
+    .row .name{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
+
+    .star{
+      width:34px;height:34px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.02);
+      cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+      color:var(--muted);
+      flex:0 0 auto;
+    }
+    .star.on{
+      color: var(--warn);
+      background:rgba(255,204,102,.10);
+      border-color: rgba(255,204,102,.30);
+    }
+
+    /* ★追加：アイコン */
+    .icon{
+      width:56px;
+      height:56px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background:rgba(0,0,0,.20);
+      object-fit:contain;
+      padding:6px;
+      flex:0 0 auto;
+    }
+
+    .titleWrap{min-width:0;}
+    .title{
+      font-weight:700;
+      font-size:13px;
+      line-height:1.2;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+    .meta{
+      margin-top:4px;
+      color:var(--muted);
+      font-size:11px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:3px 8px;
+      border-radius:999px;
+      background:var(--chip);
+      border:1px solid rgba(110,168,254,.25);
+      color:var(--text);
+      font-size:11px;
+    }
+
+    .row input{
+      width:100%;
+      padding:10px 10px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background:rgba(0,0,0,.25);
+      color:var(--text);
+      outline:none;
+      font-size:14px;
+      text-align:right;
+    }
+
+    .secTitle{
+      margin:0 0 10px;
+      font-size:12px;
+      color:var(--muted);
+      letter-spacing:.02em;
+    }
+    .kv{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:8px 0;
+      border-bottom:1px dashed rgba(255,255,255,.12);
+      gap:10px;
+      font-size:13px;
+    }
+    .kv:last-child{border-bottom:0;}
+    .kv b{font-size:14px;}
+    .yen{color:var(--warn); font-weight:800;}
+    .muted{color:var(--muted); font-size:12px;}
+
+    .box{
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:10px;
+      background:rgba(255,255,255,.02);
+      margin-top:12px;
+    }
+    details{
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:rgba(255,255,255,.02);
+      padding:10px;
+      margin-top:10px;
+    }
+    summary{
+      cursor:pointer;
+      font-weight:700;
+      font-size:13px;
+      color:var(--text);
+      list-style:none;
+    }
+    summary::-webkit-details-marker{display:none;}
+    .opt{
+      margin-top:10px;
+      padding:10px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(0,0,0,.18);
+    }
+    .opt .muted{margin-top:4px;}
+    .opt ul{margin:8px 0 0; padding-left:18px;}
+    .hint{
+      margin-top:10px;
+      color:var(--muted);
+      font-size:12px;
+    }
+
+    @media (max-width: 980px){
+      .wrap{grid-template-columns:1fr; }
+      .row{grid-template-columns: 1fr 120px;}
+      .icon{width:36px;height:36px;padding:5px;}
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1>クラフト素材計算</h1>
+  <p class="sub">カテゴリ→アイテム選択→個数入力。必要素材と料金をまとめて出します。</p>
+</header>
+
+<div class="wrap">
+  <!-- LEFT -->
+  <div class="card">
+    <div class="toolbar">
+      <div class="seg" id="categorySeg"></div>
+
+      <div class="search">
+        <input id="searchBox" type="text" placeholder="検索（例：バッグ / 弾 / ドリル）" />
+      </div>
+
+      <label class="chip"><input id="showOnlyFav" type="checkbox" /> お気に入りだけ</label>
+      <label class="chip"><input id="showOnlyEntered" type="checkbox" /> 入力中だけ表示</label>
+      <label class="chip"><input id="pinEntered" type="checkbox" checked /> 入力済みを上へ</label>
+    </div>
+
+    <div class="content">
+      <div id="items" class="list"></div>
+      <div class="hint">※ 数値は「作成回数」です（yieldがあるものは出来上がり数が変わります）</div>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="card">
+    <h2>
+      <span>結果</span>
+      <span class="muted" id="resultNote"></span>
+    </h2>
+    <div class="content">
+      <div class="box">
+        <div class="secTitle">料金合計</div>
+        <div class="kv"><span>合計</span><b class="yen" id="totalYen">0円</b></div>
+        <div class="muted" id="yenBreakdown"></div>
+      </div>
+
+      <div class="box">
+        <div class="secTitle">必要素材（合計）</div>
+        <div id="materials"></div>
+      </div>
+
+      <details id="altDetails">
+        <summary>代替レシピ（両方表示＋合計には自動で安い方を採用）</summary>
+        <div id="altBreakdowns"></div>
+      </details>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =======================
+   データ（4カテゴリ）
+======================= */
+const CATEGORIES = [
+  "違法物クラフト台",
+  "ガンスミスワークベンチ",
+  "化学作業台",
+  "薬物製造台"
+];
+
+// レシピ（材料）
+const RECIPES = {
+  // 違法物クラフト台
+  "犯罪用小型C4爆弾": { "アルミ粉": 1 },
+  "小型サーマルドリル": { "ダイヤモンドドリルビット": 2 },
+  "犯罪用小型テルミット爆弾": { "アルミ粉": 1 },
+  "小型バッグ": { "布": 20, "小型ロープ": 3 },
+  "貴金属": { }, // 代替レシピで展開表示
+  "小型ドリル": { "ダイヤモンドドリルビット": 1 },
+  "手錠の鍵": { "鉄のインゴット": 3 },
+  "ビジネスバッグ用ロックピッカー": { "鉄のインゴット": 3 },
+  "犯罪用USBメモリ 1.0": { "電子キット": 1 },
+  "ロックピック": { "鉄のインゴット": 1 },
+  "電子キット": { "貴金属": 1, "銅のインゴット": 1 }, // 代替レシピもあり
+  "犯罪用ノートパソコングレード1": { "電子キット": 1 },
+  "小型グラインダー": { "メタルブレード": 1 },
+
+  // ガンスミスワークベンチ
+  "フラッシュバン": { "メテオライトインゴット": 1, "銅のインゴット": 1, "鋼鉄のインゴット": 1 },
+  "ポータブルEMPデバイス": { "銅のインゴット": 2, "鋼鉄のインゴット": 1, "電子キット": 1 },
+  "グレネード": { "銅のインゴット": 1, "鋼鉄のインゴット": 1 },
+  "ピストル": { "ピストルボディ": 1, "鉄のバネ": 5 },
+  "頑丈な防弾チョッキ": { "布": 30, "カーボンファイバー": 30, "貴金属": 5 },
+  "Micro SMG": { "SMGボディ": 1, "鉄のバネ": 5, "鉄の歯車": 1 },
+  ".45 ACP弾": { "鋼鉄のインゴット": 6 },
+  "9mm弾": { "鋼鉄のインゴット": 3 },
+  "サプレッサー": { "カーボンファイバー": 5, "グラスファイバー": 10, "鉄のインゴット": 10 },
+  "スモークグレネード": { "メテオライトインゴット": 1, "銅のインゴット": 2, "鋼鉄のインゴット": 1 },
+  "タクティカルサプレッサー": { "カーボンファイバー": 5, "グラスファイバー": 10, "鉄のインゴット": 10 },
+  "フラッシュライト": { "グラスファイバー": 10, "電子キット": 5 },
+
+  // 化学作業台
+  "バックパックLv2": { "布": 5, "小型バッグ": 10 },
+  "化学薬品クラフトテーブル": { "アサルトライフルボディ": 20, "ダイヤモンド": 50 },
+  "油": { }, // 代替レシピで展開表示
+  "メタルブレード": { "鉄のインゴット": 1, "鋼鉄のインゴット": 1 },
+  "医療キット": { "布": 1, "ライム": 1, "鋼鉄のインゴット": 1 },
+  "鉄の歯車": { "鉄のインゴット": 2, "鋼鉄のインゴット": 1 },
+  "バックパックLv1": { "布": 1, "小型バッグ": 1 },
+  "スプレーリムーバー": { "布": 2 },
+  "スプレー": { "エメラルド": 1, "サファイア": 1 },
+  "車両引き換えゴールドチケット": { "車両ガチャの破片": 30 },
+  "万能接合剤": { "ダイヤモンド": 100, "金属接合剤": 5 },
+  "ダッフルバッグ": { "布": 10, "エメラルド": 80, "小型バッグ": 30, "小型ロープ": 10 },
+  "電子機器クラフトテーブル": { "アサルトライフルボディ": 20, "ダイヤモンド": 50 },
+  "ダイヤモンド": { "未加工ダイヤモンド": 5 }, // yield 5
+  "金属接合剤": { "ダイヤモンド": 30 }, // cost 5000
+  "包帯": { "布": 1 },
+  "SMGボディ": { }, // 代替レシピで展開表示（2通り）
+  "ボイステープ": { "電子キット": 1 },
+  "ピストルボディ": { "カーボンファイバー": 25 }, // cost 100000
+  "グラスファイバー": { "ガラス": 1 },
+  "武器クラフトテーブル": { "アサルトボディ": 20, "ダイヤモンド": 50 },
+  "サボテンクリーム": { "サボテンの果実": 1 },
+  "弾薬バッグ": { "布": 10, "小型バッグ": 10 },
+  "鉄のバネ": { "鉄のインゴット": 1, "鋼鉄のインゴット": 2 },
+  "お着替えバッグ": { "布": 20, "小型バッグ": 1 },
+
+  // 薬物製造台
+  "【麻薬】ブルーアウト": { "ブルーフラワー": 1, "金のインゴット": 1 },
+  "【麻薬】レッドスペクター": { "レッドフラワー": 1, "銅のインゴット": 1 },
+  "【麻薬】ホワイトマッド": { "ホワイトフラワー": 1, "銀のインゴット": 1 }
+};
+
+// 画像マッピング（未登録は画像なしで表示）
+const IMAGE_MAP = {
+  "犯罪用小型C4爆弾": "c4_small.png",
+  "小型サーマルドリル": "thermal_drill_small.png",
+  "犯罪用小型テルミット爆弾": "thermite_small.png",
+  "小型バッグ": "small_bag.png",
+  "小型ドリル": "drill_small.png",
+  "手錠の鍵": "handcuff_key.png",
+  "ビジネスバッグ用ロックピッカー": "lockpick.png",
+  "犯罪用USBメモリ 1.0": "crime_usb_1.png",
+  "ロックピック": "lockpick.png",
+  "電子キット": "electronic_kit.png",
+  "犯罪用ノートパソコングレード1": "crime_laptop_g1.png",
+  "小型グラインダー": "grinder_small.png",
+  "貴金属": "Precious Metal.png",
+
+  "フラッシュバン": "flashbang.png",
+  "ポータブルEMPデバイス": "emp_portable.png",
+  "グレネード": "grenade.png",
+  "ピストル": "pistol.png",
+  "頑丈な防弾チョッキ": "heavy_armor.png",
+  "Micro SMG": "micro_smg.png",
+  ".45 ACP弾": "ammo_45acp.png",
+  "9mm弾": "ammo_9mm.png",
+  "サプレッサー": "suppressor.png",
+  "スモークグレネード": "smoke_grenade.png",
+  "タクティカルサプレッサー": "suppressor.png",
+  "フラッシュライト": "flashlight.png",
+
+  "バックパックLv2": "backpack_lv2.png",
+  "化学薬品クラフトテーブル": "chemical_crafting_table.png",
+  "油": "oil.png",
+  "メタルブレード": "metal_blade.png",
+  "医療キット": "medkit.png",
+  "鉄の歯車": "gear_iron.png",
+  "バックパックLv1": "backpack_lv1.png",
+  "スプレーリムーバー": "spray_remover.png",
+  "スプレー": "spray.png",
+  "車両引き換えゴールドチケット": "gold_ticket.png",
+  "万能接合剤": "universal_adhesive.png",
+  "ダッフルバッグ": "duffle_bag.png",
+  "電子機器クラフトテーブル": "electronics_crafting_table.png",
+  "ダイヤモンド": "diamond.png",
+  "金属接合剤": "metal_adhesive.png",
+  "包帯": "bandage.png",
+  "SMGボディ": "smg_body.png",
+  "ボイステープ": "voice_tape.png",
+  "ピストルボディ": "pistol_body.png",
+  "グラスファイバー": "glass_fiber.png",
+  "武器クラフトテーブル": "weapon_crafting_table.png",
+  "サボテンクリーム": "cactus_cream.png",
+  "弾薬バッグ": "ammo_bag.png",
+  "鉄のバネ": "spring_iron.png",
+  "お着替えバッグ": "outfit_bag.png",
+
+  "【麻薬】ブルーアウト": "drug_blueout.png",
+  "【麻薬】レッドスペクター": "drug_redspecter.png",
+  "【麻薬】ホワイトマッド": "drug_whitemud.png"
+
+};
+
+function getImagePath(itemName) {
+  const map = IMAGE_MAP[itemName];
+  if (!map) return null;
+  return `images/${map}`;
+}
+
+// 代替レシピ（結果に複数表示する用）
+const ALT_RECIPES = {
+  "貴金属": [
+    { name: "金のインゴットで作る", recipe: { "金のインゴット": 2 }, yield: 1, costYen: 0 },
+    { name: "メテオライトインゴットで作る", recipe: { "メテオライトインゴット": 1 }, yield: 1, costYen: 0 },
+  ],
+  "電子キット": [
+    { name: "通常（1個）", recipe: { "貴金属": 1, "銅のインゴット": 1 }, yield: 1, costYen: 0 },
+    { name: "量産（10個できる）", recipe: { "貴金属": 10, "銅のインゴット": 10 }, yield: 10, costYen: 0 },
+  ],
+  "油": [
+    { name: "トウモロコシ袋詰め（5個できる）", recipe: { "トウモロコシの袋詰め": 1 }, yield: 5, costYen: 0 },
+    { name: "ミルク箱詰め（2個できる）", recipe: { "ミルクの箱詰め": 1 }, yield: 2, costYen: 0 },
+  ],
+  "SMGボディ": [
+    { name: "ピストルボディ3個で作る", recipe: { "ピストルボディ": 3 }, yield: 1, costYen: 100000 },
+    { name: "カーボンファイバー50で作る", recipe: { "カーボンファイバー": 50 }, yield: 1, costYen: 100000 },
+  ],
+};
+
+// カテゴリ / 料金 / 出来上がり数（yield）
+const META = {
+  // 違法物クラフト台
+  "犯罪用小型C4爆弾": { category: "違法物クラフト台", costYen: 1000, yield: 1 },
+  "小型サーマルドリル": { category: "違法物クラフト台", costYen: 2000, yield: 1 },
+  "犯罪用小型テルミット爆弾": { category: "違法物クラフト台", costYen: 2000, yield: 1 },
+  "小型バッグ": { category: "違法物クラフト台", costYen: 100, yield: 1 },
+  "貴金属": { category: "違法物クラフト台", costYen: 0, yield: 1 },
+  "小型ドリル": { category: "違法物クラフト台", costYen: 0, yield: 1 },
+  "手錠の鍵": { category: "違法物クラフト台", costYen: 10000, yield: 1 },
+  "ビジネスバッグ用ロックピッカー": { category: "違法物クラフト台", costYen: 10000, yield: 1 },
+  "犯罪用USBメモリ 1.0": { category: "違法物クラフト台", costYen: 500, yield: 1 },
+  "ロックピック": { category: "違法物クラフト台", costYen: 0, yield: 1 },
+  "電子キット": { category: "違法物クラフト台", costYen: 0, yield: 1 },
+  "犯罪用ノートパソコングレード1": { category: "違法物クラフト台", costYen: 1500, yield: 1 },
+  "小型グラインダー": { category: "違法物クラフト台", costYen: 500, yield: 1 },
+
+  // ガンスミス
+  "フラッシュバン": { category: "ガンスミスワークベンチ", costYen: 0, yield: 2 },
+  "ポータブルEMPデバイス": { category: "ガンスミスワークベンチ", costYen: 0, yield: 2 },
+  "グレネード": { category: "ガンスミスワークベンチ", costYen: 0, yield: 2 },
+  "スモークグレネード": { category: "ガンスミスワークベンチ", costYen: 0, yield: 2 },
+  ".45 ACP弾": { category: "ガンスミスワークベンチ", costYen: 63000, yield: 100 },
+  "9mm弾": { category: "ガンスミスワークベンチ", costYen: 0, yield: 100 },
+  "ピストル": { category: "ガンスミスワークベンチ", costYen: 100000, yield: 1 },
+  "頑丈な防弾チョッキ": { category: "ガンスミスワークベンチ", costYen: 50000, yield: 1 },
+  "Micro SMG": { category: "ガンスミスワークベンチ", costYen: 200000, yield: 1 },
+  "サプレッサー": { category: "ガンスミスワークベンチ", costYen: 5000, yield: 1 },
+  "タクティカルサプレッサー": { category: "ガンスミスワークベンチ", costYen: 5000, yield: 1 },
+  "フラッシュライト": { category: "ガンスミスワークベンチ", costYen: 5000, yield: 1 },
+
+  // 化学作業台
+  "バックパックLv2": { category: "化学作業台", costYen: 30000, yield: 1 },
+  "化学薬品クラフトテーブル": { category: "化学作業台", costYen: 50000000, yield: 1 },
+  "油": { category: "化学作業台", costYen: 0, yield: 1 },
+  "メタルブレード": { category: "化学作業台", costYen: 0, yield: 1 },
+  "医療キット": { category: "化学作業台", costYen: 10000, yield: 1 },
+  "鉄の歯車": { category: "化学作業台", costYen: 0, yield: 1 },
+  "バックパックLv1": { category: "化学作業台", costYen: 0, yield: 1 },
+  "スプレーリムーバー": { category: "化学作業台", costYen: 0, yield: 1 },
+  "スプレー": { category: "化学作業台", costYen: 0, yield: 1 },
+  "車両引き換えゴールドチケット": { category: "化学作業台", costYen: 0, yield: 1 },
+  "万能接合剤": { category: "化学作業台", costYen: 10000, yield: 1 },
+  "ダッフルバッグ": { category: "化学作業台", costYen: 100000, yield: 1 },
+  "電子機器クラフトテーブル": { category: "化学作業台", costYen: 50000000, yield: 1 },
+  "ダイヤモンド": { category: "化学作業台", costYen: 0, yield: 5 },
+  "金属接合剤": { category: "化学作業台", costYen: 5000, yield: 1 },
+  "包帯": { category: "化学作業台", costYen: 0, yield: 1 },
+  "SMGボディ": { category: "化学作業台", costYen: 0, yield: 1 }, // costは代替レシピ側
+  "ボイステープ": { category: "化学作業台", costYen: 0, yield: 1 },
+  "ピストルボディ": { category: "化学作業台", costYen: 100000, yield: 1 },
+  "グラスファイバー": { category: "化学作業台", costYen: 0, yield: 1 },
+  "武器クラフトテーブル": { category: "化学作業台", costYen: 50000000, yield: 1 },
+  "サボテンクリーム": { category: "化学作業台", costYen: 0, yield: 1 },
+  "弾薬バッグ": { category: "化学作業台", costYen: 10000, yield: 1 },
+  "鉄のバネ": { category: "化学作業台", costYen: 0, yield: 1 },
+  "お着替えバッグ": { category: "化学作業台", costYen: 0, yield: 1 },
+
+  // 薬物製造台
+  "【麻薬】ブルーアウト": { category: "薬物製造台", costYen: 0, yield: 1 },
+  "【麻薬】レッドスペクター": { category: "薬物製造台", costYen: 0, yield: 1 },
+  "【麻薬】ホワイトマッド": { category: "薬物製造台", costYen: 0, yield: 1 }
+};
+
+/* =======================
+   状態
+======================= */
+let currentCategory = "違法物クラフト台";
+const counts = {};        // itemName -> craftTimes
+const favorites = new Set();
+
+const categorySeg = document.getElementById("categorySeg");
+const itemsEl = document.getElementById("items");
+const matsEl  = document.getElementById("materials");
+const altEl   = document.getElementById("altBreakdowns");
+
+const searchBox = document.getElementById("searchBox");
+const showOnlyFav = document.getElementById("showOnlyFav");
+const showOnlyEntered = document.getElementById("showOnlyEntered");
+const pinEntered = document.getElementById("pinEntered");
+
+const totalYenEl = document.getElementById("totalYen");
+const yenBreakdownEl = document.getElementById("yenBreakdown");
+const resultNote = document.getElementById("resultNote");
+const altDetails = document.getElementById("altDetails");
+
+/* =======================
+   ユーティリティ
+======================= */
+function fmtYen(n){ return (n||0).toLocaleString("ja-JP"); }
+
+function getYield(itemName){
+  const y = META[itemName]?.yield;
+  return Number.isFinite(y) && y > 0 ? y : 1;
+}
+function getCost(itemName){
+  const c = META[itemName]?.costYen;
+  return Number.isFinite(c) && c >= 0 ? c : 0;
+}
+
+function itemsByCategory(cat){
+  return Object.keys(META).filter(k => META[k]?.category === cat);
+}
+
+function passesFilters(name){
+  const q = (searchBox.value || "").trim().toLowerCase();
+  if (q && !name.toLowerCase().includes(q)) return false;
+  if (showOnlyFav.checked && !favorites.has(name)) return false;
+  if (showOnlyEntered.checked && (counts[name]||0) <= 0) return false;
+  return true;
+}
+
+/* =======================
+   計算：素材合計 + 料金合計（基本）
+======================= */
+function computeBaseTotalsAndCost(){
+  const totals = {};
+  let cost = 0;
+  const costBreakdown = [];
+
+  for (const [itemName, craftTimes] of Object.entries(counts)) {
+    const t = craftTimes || 0;
+    if (t <= 0) continue;
+
+    const itemCost = getCost(itemName) * t;
+    cost += itemCost;
+    costBreakdown.push({ name:itemName, yen:itemCost });
+
+    const recipe = RECIPES[itemName];
+    if (!recipe) continue;
+
+    for (const [mat, per] of Object.entries(recipe)) {
+      totals[mat] = (totals[mat] || 0) + per * t;
+    }
+  }
+
+  return { totals, cost, costBreakdown };
+}
+
+/* =======================
+   代替レシピの展開
+   - 両方表示
+   - 合計に加算するのは「安い方」(tie:先頭)
+======================= */
+function buildAltBreakdowns(totals){
+  const breakdowns = [];
+  let chosenCostAdd = 0;
+  const chosenCostBreakdown = [];
+  const chosenMatsAdd = {}; // 合計に加算する材料（選ばれた方）
+
+  for (const [altItem, options] of Object.entries(ALT_RECIPES)) {
+    const need = totals[altItem] || 0;
+    if (need <= 0) continue;
+
+    const optionResults = options.map(opt => {
+      const y = opt.yield || 1;
+      const craftTimes = Math.ceil(need / y);
+
+      const mats = {};
+      for (const [mat, per] of Object.entries(opt.recipe)) {
+        mats[mat] = per * craftTimes;
+      }
+
+      const costYen = (opt.costYen || 0) * craftTimes;
+
+      return {
+        name: opt.name,
+        need, yield: y, craftTimes,
+        mats, costYen
+      };
+    });
+
+    // 合計に入れる候補（最安）
+    let chosen = optionResults[0];
+    for (const r of optionResults) {
+      if (r.costYen < chosen.costYen) chosen = r;
+    }
+
+    // 合計に加算（料金）
+    chosenCostAdd += chosen.costYen;
+    chosenCostBreakdown.push({ name: `${altItem}（代替採用：${chosen.name}）`, yen: chosen.costYen });
+
+    // 合計に加算（材料）
+    for (const [mat, v] of Object.entries(chosen.mats)) {
+      chosenMatsAdd[mat] = (chosenMatsAdd[mat] || 0) + v;
+    }
+
+    breakdowns.push({ item: altItem, need, options: optionResults, chosenName: chosen.name });
+  }
+
+  return { breakdowns, chosenCostAdd, chosenCostBreakdown, chosenMatsAdd };
+}
+
+/* =======================
+   レンダリング
+======================= */
+function renderCategorySeg(){
+  categorySeg.innerHTML = "";
+  for (const cat of CATEGORIES) {
+    const b = document.createElement("button");
+    b.textContent = cat;
+    b.className = (cat === currentCategory) ? "active" : "";
+    b.addEventListener("click", () => {
+      currentCategory = cat;
+      renderCategorySeg();
+      renderItems();
+    });
+    categorySeg.appendChild(b);
+  }
+}
+
+function renderItems(){
+  itemsEl.innerHTML = "";
+
+  let list = itemsByCategory(currentCategory).filter(passesFilters);
+
+  // 並び順：入力済み上 / お気に入り上 / あとは名前順
+  list.sort((a,b)=>{
+    const aEntered = (counts[a]||0) > 0;
+    const bEntered = (counts[b]||0) > 0;
+    if (pinEntered.checked && aEntered !== bEntered) return aEntered ? -1 : 1;
+
+    const aFav = favorites.has(a);
+    const bFav = favorites.has(b);
+    if (aFav !== bFav) return aFav ? -1 : 1;
+
+    return a.localeCompare(b, "ja");
+  });
+
+  if (list.length === 0) {
+    itemsEl.innerHTML = `<div class="muted">該当するアイテムがありません（検索条件/トグルを見直してね）</div>`;
+    renderResults();
+    return;
+  }
+
+  for (const itemName of list) {
+    const row = document.createElement("div");
+    row.className = "row";
+
+    const craftTimes = counts[itemName] ?? 0;
+    const entered = craftTimes > 0;
+    if (entered) row.classList.add("entered");
+
+    const left = document.createElement("div");
+    left.className = "name";
+
+    const star = document.createElement("button");
+    star.className = "star" + (favorites.has(itemName) ? " on" : "");
+    star.innerHTML = favorites.has(itemName) ? "★" : "☆";
+    star.title = "お気に入り";
+    star.addEventListener("click", () => {
+      if (favorites.has(itemName)) favorites.delete(itemName);
+      else favorites.add(itemName);
+      renderItems();
+    });
+
+    const y = getYield(itemName);
+    const produced = craftTimes * y;
+    const cost = getCost(itemName);
+
+    const info = document.createElement("div");
+    info.className = "titleWrap";
+    info.innerHTML = `
+      <div class="title">${itemName}</div>
+      <div class="meta">
+        <span class="badge">出来上がり：${produced}（${y}個/回）</span>
+        <span class="badge">料金：${fmtYen(cost)}円/回</span>
+      </div>
+    `;
+
+    // ★ここが「画像を挟む」完全版
+    left.appendChild(star);
+
+    const imgPath = getImagePath(itemName);
+    if (imgPath) {
+      const img = document.createElement("img");
+      img.className = "icon";
+      img.src = imgPath;
+      img.alt = itemName;
+      img.loading = "lazy";
+      img.decoding = "async";
+      // 画像が無い/壊れてる時は消す
+      img.addEventListener("error", () => img.remove());
+      left.appendChild(img);
+    }
+
+    left.appendChild(info);
+
+    const input = document.createElement("input");
+    input.type = "number";
+    input.min = "0";
+    input.step = "1";
+    input.value = craftTimes;
+
+    input.addEventListener("input", () => {
+      const v = Math.floor(Number(input.value || 0));
+      counts[itemName] = Math.max(0, v);
+      // 入力したら、その行がわかるように即反映
+      renderItems();
+    });
+
+    row.appendChild(left);
+    row.appendChild(input);
+    itemsEl.appendChild(row);
+  }
+
+  renderResults();
+}
+
+function renderResults(){
+  const { totals: baseTotals, cost: baseCost, costBreakdown: baseBreak } = computeBaseTotalsAndCost();
+  const { breakdowns, chosenCostAdd, chosenCostBreakdown, chosenMatsAdd } = buildAltBreakdowns(baseTotals);
+
+  // 合計に「代替採用の材料」を加算した最終素材
+  const totals = { ...baseTotals };
+  for (const [k,v] of Object.entries(chosenMatsAdd)) {
+    totals[k] = (totals[k] || 0) + v;
+  }
+
+  // 代替アイテム自身（貴金属など）が素材一覧に残るのが邪魔なので、表示からは消す（内訳で見えるため）
+  for (const altItem of Object.keys(ALT_RECIPES)) {
+    if (totals[altItem]) delete totals[altItem];
+  }
+
+  // 料金合計（ベース + 代替採用分）
+  const totalCost = baseCost + chosenCostAdd;
+
+  // 表示
+  totalYenEl.textContent = `${fmtYen(totalCost)}円`;
+
+  // 料金内訳（0円も出す）
+  const mergedBreak = [...baseBreak, ...chosenCostBreakdown]
+    .sort((a,b)=> b.yen - a.yen);
+
+  yenBreakdownEl.innerHTML = mergedBreak.length
+    ? mergedBreak.map(x => `・${x.name}：<b>${fmtYen(x.yen)}円</b>`).join("<br>")
+    : "・（まだ入力がありません）";
+
+  // 素材合計
+  const entries = Object.entries(totals).sort((a,b)=> b[1]-a[1]);
+  matsEl.innerHTML = entries.length
+    ? entries.map(([k,v]) => `<div class="kv"><span>${k}</span><b>${v}</b></div>`).join("")
+    : `<div class="muted">まだ入力がありません</div>`;
+
+  // 代替レシピ表示
+  if (breakdowns.length) {
+    altDetails.open = true;
+    altEl.innerHTML = breakdowns.map(b => {
+      const opts = b.options.map(opt => {
+        const mats = Object.entries(opt.mats).map(([k,v]) => `<li>${k}: <b>${v}</b></li>`).join("");
+        return `
+          <div class="opt">
+            <div><b>${opt.name}</b></div>
+            <div class="muted">${opt.yield}個/回 → ${opt.craftTimes}回クラフト（必要数 ${b.need}）</div>
+            <ul>${mats}</ul>
+            <div class="muted">この選択の料金：<b>${fmtYen(opt.costYen)}円</b></div>
+          </div>
+        `;
+      }).join("");
+
+      return `
+        <div class="box">
+          <div><b>${b.item}</b>（必要数：${b.need}）</div>
+          <div class="muted">※ 合計には「${b.chosenName}」を自動採用</div>
+          ${opts}
+        </div>
+      `;
+    }).join("");
+  } else {
+    altDetails.open = false;
+    altEl.innerHTML = `<div class="muted">（代替レシピ対象の素材が、今は必要ありません）</div>`;
+  }
+
+  // 右上の注釈
+  const enteredCount = Object.values(counts).filter(v => (v||0) > 0).length;
+  resultNote.textContent = enteredCount ? `入力中：${enteredCount}件` : "";
+}
+
+/* =======================
+   イベント
+======================= */
+searchBox.addEventListener("input", () => renderItems());
+showOnlyFav.addEventListener("change", () => renderItems());
+showOnlyEntered.addEventListener("change", () => renderItems());
+pinEntered.addEventListener("change", () => renderItems());
+
+/* =======================
+   初期表示
+======================= */
+renderCategorySeg();
+renderItems();
+</script>
+</body>
+</html>
