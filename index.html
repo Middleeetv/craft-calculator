@@ -632,6 +632,12 @@ function computeBaseTotalsAndCost(){
     cost += itemCost;
     costBreakdown.push({ name:itemName, yen:itemCost });
 
+    // ★ここに追加
+    if (ALT_RECIPES[itemName]) {
+      const produced = t * getYield(itemName);
+      totals[itemName] = (totals[itemName] || 0) + produced;
+    }
+
     const recipe = RECIPES[itemName];
     if (!recipe) continue;
 
@@ -898,3 +904,4 @@ renderItems();
 </script>
 </body>
 </html>
+
