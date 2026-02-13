@@ -821,6 +821,15 @@ function renderItems(){
 
 function renderResults(){
   const { totals: baseTotals, cost: baseCost, costBreakdown: baseBreak } = computeBaseTotalsAndCost();
+
+　// ★ここに追加する
+  for (const [itemName, craftTimes] of Object.entries(counts)) {
+    if ((craftTimes || 0) > 0 && ALT_RECIPES[itemName]) {
+      const y = getYield(itemName);
+      const produced = craftTimes * y;
+      baseTotals[itemName] = (baseTotals[itemName] || 0) + produced;
+    }
+  }
   const { breakdowns, chosenCostAdd, chosenCostBreakdown, chosenMatsAdd } = buildAltBreakdowns(baseTotals);
 
   // 合計に「代替採用の材料」を加算した最終素材
@@ -904,4 +913,5 @@ renderItems();
 </script>
 </body>
 </html>
+
 
