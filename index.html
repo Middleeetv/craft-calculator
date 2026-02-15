@@ -285,15 +285,53 @@
       .row{grid-template-columns: 1fr 120px;}
       .icon{width:36px;height:36px;padding:5px;}
     }
+  
+    .tabs{
+      display:flex;
+      gap:10px;
+      margin-top:14px;
+      flex-wrap:wrap;
+    }
+    .tab{
+      appearance:none;
+      border:1px solid var(--line);
+      background:rgba(0,0,0,.25);
+      color:var(--text);
+      padding:10px 14px;
+      border-radius:14px;
+      cursor:pointer;
+      font-weight:700;
+      letter-spacing:.02em;
+      box-shadow: 0 10px 26px rgba(0,0,0,.25);
+    }
+    .tab:hover{ transform: translateY(-1px); }
+    .tab.active{
+      background: rgba(110,168,254,.18);
+      border-color: rgba(110,168,254,.35);
+    }
+    .hidden{ display:none !important; }
+    #crimeItems .item{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+    #crimeItems .item .meta{ display:flex; flex-direction:column; gap:4px; }
+    #crimeItems .item .qty{ font-weight:800; font-size:14px; }
+
   </style>
 </head>
 <body>
 <header>
   <h1>クラフト素材計算</h1>
   <p class="sub">カテゴリ→アイテム選択→回数入力。必要素材と料金、スーパー購入コストをまとめて出します。</p>
+  <div class="tabs">
+    <button id="tabCraft" class="tab active" type="button">クラフト計算</button>
+    <button id="tabCrime" class="tab" type="button">犯罪に必要な道具一覧</button>
+  </div>
 </header>
 
-<div class="wrap">
+<div id="craftPage" class="wrap">
   <!-- LEFT -->
   <div class="card">
     <div class="toolbar">
@@ -350,6 +388,58 @@
       <details id="altDetails">
         <summary>代替レシピ（手動で選択できます）</summary>
         <div id="altBreakdowns"></div>
+      </details>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- CRIME PAGE -->
+<div id="crimePage" class="wrap hidden">
+  <!-- LEFT -->
+  <div class="card">
+    <div class="toolbar">
+      <div class="seg">
+        <div class="title">犯罪プリセット</div>
+      </div>
+
+      <div class="crimebar" style="display:flex; gap:8px; align-items:center; min-width:260px; flex:0 0 360px;">
+        <select id="crimeSelect" aria-label="犯罪プリセット" style="width:100%; padding:10px 12px; border-radius:12px; border:1px solid var(--line); background:rgba(0,0,0,.25); color:var(--text); outline:none; font-size:12px;"></select>
+        <input id="crimeTimes" class="chip" type="number" min="1" step="1" value="1" style="width:86px; text-align:center;" title="回数/人数" />
+      </div>
+
+      <label class="chip"><input id="crimeIncludeMaterials" type="checkbox" checked /> 素材も含める</label>
+      <label class="chip"><input id="crimeSingleMode" type="checkbox" checked /> 単体モード</label>
+      <button id="addCrimeBtn" class="chip" type="button">（複数用）追加</button>
+      <button id="clearCrimeBtn" class="chip" type="button">セットクリア</button>
+
+      <div class="hint">※ 「回数」は <b>人数分（バッグなど）</b> を増やしたい時にも使えます。</div>
+    </div>
+
+    <div class="content">
+      <div id="crimeItems" class="list"></div>
+      <div class="hint">※ ここは必要な道具/素材だけを一覧表示する専用ページです。</div>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="card">
+    <h2><span>犯罪セット</span><span class="muted">（選択中の内容）</span></h2>
+    <div class="content">
+      <div class="box">
+        <div class="secTitle">必要道具（合計）</div>
+        <div id="crimePlan" class="muted">（まだ追加がありません）</div>
+      </div>
+
+      <details open>
+        <summary>使い方</summary>
+        <div class="muted" style="margin-top:10px; line-height:1.8;">
+          ① 上で犯罪を選ぶ → ② 回数を入れる（例：回収者人数） → ③ 左に必要な道具/素材が出ます。<br/>
+          「素材も含める」をONにすると、道具の素材まで自動で展開して表示します（RECIPESがあるもののみ）。<br/>
+          「単体モード」ONなら、犯罪を切り替えるだけで内容が入れ替わります。<br/>
+          複数犯罪を合算したい時だけ「（複数用）追加」を使ってください。
+        </div>
       </details>
     </div>
   </div>
@@ -426,7 +516,7 @@ const RECIPES = {
   // 薬物製造台
   "【麻薬】ブルーアウト": { "ブルーフラワー": 1, "金のインゴット": 1 },
   "【麻薬】レッドスペクター": { "レッドフラワー": 1, "銅のインゴット": 1 },
-  "【麻薬】ホワイトマッド": { "ホワイトフラワー": 1, "銀のインゴット": 1 }
+  "【麻薬】ホワイトマッド": { "ホワイトフラワー": 1, "銀のインゴット": 1 },
 };
 
 const IMAGE_MAP = {
@@ -573,7 +663,20 @@ const META = {
   // 薬物製造台
   "【麻薬】ブルーアウト": { category: "薬物製造台", costYen: 0, yield: 1 },
   "【麻薬】レッドスペクター": { category: "薬物製造台", costYen: 0, yield: 1 },
-  "【麻薬】ホワイトマッド": { category: "薬物製造台", costYen: 0, yield: 1 }
+  "【麻薬】ホワイトマッド": { category: "薬物製造台", costYen: 0, yield: 1 },
+  "犯罪用ノートパソコン グレード2": { category: "道具", super: false },
+  "犯罪用中型ドリル": { category: "道具", super: false },
+  "犯罪用USBメモリ 2.0": { category: "道具", super: false },
+  "犯罪用のバール": { category: "道具", super: false },
+  "犯罪用中型カッター": { category: "道具", super: false },
+  "宝石店の合鍵": { category: "道具", super: false },
+  "犯罪用中型C4爆弾": { category: "道具", super: false },
+  "犯罪用中型バック": { category: "道具", super: false },
+  "204号室の鍵": { category: "道具", super: false },
+  "犯罪用大型バッグ": { category: "道具", super: false },
+  "犯罪用大型C4爆弾": { category: "道具", super: false },
+  "Smoke Grenade": { category: "道具", super: false },
+  "銃器（ショーケースを壊せるもの）": { category: "道具", super: false },
 };
 
 // スーパー購入価格（1個あたり）
@@ -599,13 +702,65 @@ const SHOP_PRICE = {
   "小型ロープ": 200000,
 };
 
+
+/* =======================
+   犯罪プリセット（ここを編集すれば増やせます）
+   - key: 犯罪名
+   - value: 必要な「道具（=このページのアイテム名）」: 個数
+   ※ 人数分が必要なもの（バッグ等）は、犯罪ページの「回数」を人数にして調整してください。
+======================= */
+const CRIMES = {
+  "中型 - パレト銀行強盗（USBはミニゲームで消費）": {
+    "犯罪用ノートパソコン グレード2": 1,
+    "犯罪用中型ドリル": 3,
+    "犯罪用USBメモリ 2.0": 3
+  },
+  "中型 - クルーザー強盗（全回収）": {
+    "犯罪用USBメモリ 2.0": 2,
+    "犯罪用中型ドリル": 4
+  },
+  "中型 - 宝石店強盗（銃器はショーケース破壊用）": {
+    "宝石店の合鍵": 1,
+    "犯罪用のバール": 1,
+    "犯罪用中型カッター": 4,
+    "銃器（ショーケースを壊せるもの）": 1
+  },
+  "中型 - ボブキャット強盗（Loud）※回収者人数=回数": {
+    "犯罪用ノートパソコン グレード2": 5,
+    "犯罪用のバール": 1,
+    "犯罪用中型C4爆弾": 3,
+    "犯罪用USBメモリ 2.0": 3,
+    "犯罪用中型バック": 1
+  },
+  "中型 - ボブキャット強盗（Silent）※回収者人数=回数": {
+    "犯罪用ノートパソコン グレード2": 5,
+    "犯罪用のバール": 1,
+    "犯罪用中型C4爆弾": 1,
+    "犯罪用USBメモリ 2.0": 5,
+    "Smoke Grenade": 1,
+    "犯罪用中型バック": 1
+  },
+  "大型 - ユニオン銀行 ※回収者人数=回数": {
+    "204号室の鍵": 1,
+    "犯罪用大型バッグ": 1,
+    "犯罪用大型C4爆弾": 8
+  }
+};
+
+
+
 /* =======================
    状態
 ======================= */
 let currentCategory = "違法物クラフト台";
 const counts = {};          // itemName -> craftTimes
 const favorites = new Set();
-const altChoice = {};       // altChoice["貴金属"]=0 など
+const altChoice = {};
+
+const selectedCrimes = []; // [{name, times}]
+let crimeRequiredSet = new Set();
+let currentPage = "craft";
+       // altChoice["貴金属"]=0 など
 
 /* =======================
    DOM
@@ -623,6 +778,20 @@ const showOnlyFav = $("showOnlyFav");
 const showOnlyEntered = $("showOnlyEntered");
 const pinEntered = $("pinEntered");
 const resetBtn = $("resetBtn");
+
+const tabCraft = $("tabCraft");
+const tabCrime = $("tabCrime");
+const craftPage = $("craftPage");
+const crimePage = $("crimePage");
+const crimeSelect = $("crimeSelect");
+const crimeTimes = $("crimeTimes");
+const crimeIncludeMaterials = $("crimeIncludeMaterials");
+const crimeSingleMode = $("crimeSingleMode");
+const addCrimeBtn = $("addCrimeBtn");
+const clearCrimeBtn = $("clearCrimeBtn");
+const crimePlanEl = $("crimePlan");
+const crimeItemsEl = $("crimeItems");
+
 
 
 const totalYenEl = $("totalYen");
@@ -916,6 +1085,158 @@ function renderItems(){
   renderResults();
 }
 
+
+/* =======================
+   犯罪ページ用
+======================= */
+function getCrimeNames(){ return Object.keys(CRIMES); }
+
+function computeCrimeTotals(){
+  const totals = {};
+  for (const c of selectedCrimes) {
+    const times = Math.max(1, Number(c.times || 1) || 1);
+    const req = CRIMES[c.name] || {};
+    for (const [item, qty] of Object.entries(req)) {
+      totals[item] = (totals[item] || 0) + (Number(qty || 0) * times);
+    }
+  }
+  return totals;
+}
+
+function computeCrimeRequiredSet(){
+  const includeMaterials = !!crimeIncludeMaterials?.checked;
+  const totals = computeCrimeTotals();
+  const reqSet = new Set(Object.keys(totals));
+
+  if (!includeMaterials) return reqSet;
+
+  const stack = [...reqSet];
+  const seen = new Set(stack);
+
+  while (stack.length){
+    const item = stack.pop();
+    const recipe = RECIPES[item];
+    if (!recipe) continue;
+    for (const ing of Object.keys(recipe)){
+      if (!seen.has(ing)){
+        seen.add(ing);
+        reqSet.add(ing);
+        stack.push(ing);
+      }
+    }
+  }
+  return reqSet;
+}
+
+function refreshCrimeFilters(){
+  crimeRequiredSet = computeCrimeRequiredSet();
+}
+
+function renderCrimeSelect(){
+  if (!crimeSelect) return;
+  const names = getCrimeNames();
+  crimeSelect.innerHTML = names.map(n => `<option value="${n}">${n}</option>`).join("");
+}
+
+function renderCrimePlan(){
+  if (!crimePlanEl) return;
+
+  if (!selectedCrimes.length){
+    crimePlanEl.innerHTML = "（まだ追加がありません）";
+    return;
+  }
+
+  const totals = computeCrimeTotals();
+  const lines = Object.entries(totals)
+    .filter(([,v]) => (v||0) > 0)
+    .sort((a,b)=> (b[1]||0) - (a[1]||0))
+    .map(([k,v]) => `<div class="kv"><span>${k}</span><b>${v}</b></div>`)
+    .join("");
+
+  const chips = selectedCrimes.map((c, i) => {
+    const t = Math.max(1, Number(c.times||1)||1);
+    return `
+      <span class="badge" style="margin:4px 6px 0 0; display:inline-flex; align-items:center; gap:6px;">
+        ${c.name} ×${t}
+        <button class="star" style="width:26px; height:26px; border-radius:10px;"
+                title="削除" onclick="removeCrime(${i})">×</button>
+      </span>
+    `;
+  }).join("");
+
+  crimePlanEl.innerHTML = `
+    <div style="margin-bottom:8px;">${chips}</div>
+    <div class="muted" style="margin:6px 0 10px;">合計（必要道具）</div>
+    ${lines || '<div class="muted">（合計が0です）</div>'}
+  `;
+}
+
+window.removeCrime = function(i){
+  selectedCrimes.splice(i, 1);
+  refreshCrimeFilters();
+  renderCrimePlan();
+  renderCrimeItems();
+};
+
+function renderCrimeItems(){
+  if (!crimeItemsEl) return;
+  refreshCrimeFilters();
+
+  const totals = computeCrimeTotals();
+  const items = Object.keys(META).filter(name => crimeRequiredSet.has(name));
+
+  items.sort((a,b)=>{
+    const ca = META[a]?.category || "";
+    const cb = META[b]?.category || "";
+    if (ca !== cb) return ca.localeCompare(cb, "ja");
+    return a.localeCompare(b, "ja");
+  });
+
+  crimeItemsEl.innerHTML = items.map(name => {
+    const cat = META[name]?.category || "";
+    const qty = (name in totals) ? totals[name] : null;
+    const tag = (qty == null && crimeIncludeMaterials?.checked) ? "（素材）" : "";
+    return `
+      <div class="item">
+        <div class="meta">
+          <div class="name">${name}</div>
+          <div class="muted">${cat}${tag}</div>
+        </div>
+        <div class="qty">${qty == null ? "-" : qty}</div>
+      </div>
+    `;
+  }).join("") || '<div class="muted">（この犯罪に必要なアイテムが見つかりません）</div>';
+}
+
+function clearCrimePlan(){
+  selectedCrimes.length = 0;
+  refreshCrimeFilters();
+  renderCrimePlan();
+  renderCrimeItems();
+}
+
+function setPage(mode){
+  const isCrime = (mode === "crime");
+  currentPage = isCrime ? "crime" : "craft";
+
+  if (craftPage) craftPage.classList.toggle("hidden", isCrime);
+  if (crimePage) crimePage.classList.toggle("hidden", !isCrime);
+
+  if (tabCraft) tabCraft.classList.toggle("active", !isCrime);
+  if (tabCrime) tabCrime.classList.toggle("active", isCrime);
+
+  if (isCrime){
+    if (crimeSingleMode?.checked && crimeSelect?.value){
+      selectedCrimes.length = 0;
+      selectedCrimes.push({ name: crimeSelect.value, times: Math.max(1, Number(crimeTimes?.value || 1) || 1) });
+    }
+    renderCrimePlan();
+    renderCrimeItems();
+  } else {
+    renderItems();
+  }
+}
+
 function renderResults(){
   const { totals: baseTotals, cost: baseCost, costBreakdown: baseBreak } = computeBaseTotalsAndCost();
   const { breakdowns, chosenCostAdd, chosenCostBreakdown, chosenMatsAdd } = buildAltBreakdowns(baseTotals);
@@ -1022,6 +1343,54 @@ function renderResults(){
 /* =======================
    イベント
 ======================= */
+
+// ページ切替（タブ）
+if (tabCraft) tabCraft.addEventListener("click", () => setPage("craft"));
+if (tabCrime) tabCrime.addEventListener("click", () => setPage("crime"));
+
+// 犯罪ページ
+if (crimeSelect) crimeSelect.addEventListener("change", () => {
+  const name = crimeSelect.value;
+  const times = Math.max(1, Number(crimeTimes?.value || 1) || 1);
+  if (crimeSingleMode?.checked){
+    selectedCrimes.length = 0;
+    selectedCrimes.push({ name, times });
+  }
+  renderCrimePlan();
+  renderCrimeItems();
+});
+if (crimeTimes) crimeTimes.addEventListener("input", () => {
+  if (crimeSingleMode?.checked){
+    const name = crimeSelect?.value;
+    const times = Math.max(1, Number(crimeTimes.value || 1) || 1);
+    selectedCrimes.length = 0;
+    if (name) selectedCrimes.push({ name, times });
+  }
+  renderCrimePlan();
+  renderCrimeItems();
+});
+if (crimeIncludeMaterials) crimeIncludeMaterials.addEventListener("change", () => {
+  renderCrimePlan();
+  renderCrimeItems();
+});
+if (crimeSingleMode) crimeSingleMode.addEventListener("change", () => {
+  const name = crimeSelect?.value;
+  const times = Math.max(1, Number(crimeTimes?.value || 1) || 1);
+  selectedCrimes.length = 0;
+  if (name) selectedCrimes.push({ name, times });
+  renderCrimePlan();
+  renderCrimeItems();
+});
+if (addCrimeBtn) addCrimeBtn.addEventListener("click", () => {
+  const name = crimeSelect?.value;
+  if (!name) return;
+  const times = Math.max(1, Number(crimeTimes?.value || 1) || 1);
+  selectedCrimes.push({ name, times });
+  renderCrimePlan();
+  renderCrimeItems();
+});
+if (clearCrimeBtn) clearCrimeBtn.addEventListener("click", () => clearCrimePlan());
+
 if (searchBox) searchBox.addEventListener("input", () => renderItems());
 if (showOnlyFav) showOnlyFav.addEventListener("change", () => renderItems());
 if (showOnlyEntered) showOnlyEntered.addEventListener("change", () => renderItems());
@@ -1042,6 +1411,8 @@ if (resetBtn) {
 /* =======================
    初期表示
 ======================= */
+renderCrimeSelect();
+setPage("craft");
 renderCategorySeg();
 renderItems();
 </script>
