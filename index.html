@@ -286,6 +286,19 @@
       .icon{width:36px;height:36px;padding:5px;}
     }
   
+    /* ===== 犯罪名の前につけるカラー丸（●） ===== */
+    .crime-dot{
+      font-size: 14px;
+      margin-right: 6px;
+      line-height: 1;
+    }
+
+    .crime-dot.small{ color:#3b82f6; } /* 青 */
+    .crime-dot.mid{   color:#f59e0b; } /* オレンジ */
+    .crime-dot.large{ color:#ef4444; } /* 赤 */
+    .crime-dot.gig{   color:#a855f7; } /* 紫 */
+
+
     .tabs{
       display:flex;
       gap:10px;
@@ -318,6 +331,19 @@
     }
     #crimeItems .item .meta{ display:flex; flex-direction:column; gap:4px; }
     #crimeItems .item .qty{ font-weight:800; font-size:14px; }
+
+    /* 必要条件NOTE用 */
+    .note-box{
+    border:1px solid rgba(255,204,102,.25);
+    background:rgba(255,204,102,.05);
+    }
+
+    .note-text{
+    font-size:13px;
+    line-height:1.6;
+    color:#ffcc66;
+}
+
 
   </style>
 </head>
@@ -405,7 +431,19 @@
       </div>
 
       <div class="crimebar" style="display:flex; gap:8px; align-items:center; min-width:260px; flex:0 0 360px;">
-        <select id="crimeSelect" aria-label="犯罪プリセット" style="width:100%; padding:10px 12px; border-radius:12px; border:1px solid var(--line); background:rgba(0,0,0,.25); color:var(--text); outline:none; font-size:12px;"></select>
+      <div style="display:flex; align-items:center; gap:8px;">
+      <span id="crimeDotPreview" class="crime-dot mid">●</span>
+
+      <select id="crimeSelect" aria-label="犯罪プリセット"
+        style="width:100%; padding:10px 12px; border-radius:12px; border:1px solid var(--line); background:rgba(0,0,0,.25); color:var(--text); outline:none; font-size:12px;">
+      </select>
+      <select id="crimeMethod" aria-label="方法" class="hidden"
+        style="width:100%; max-width:160px; padding:10px 12px; border-radius:12px; border:1px solid var(--line);
+          background:rgba(0,0,0,.25); color:var(--text); outline:none; font-size:12px;">
+      </select>
+
+      
+    </div>
         <input id="crimeTimes" class="chip" type="number" min="1" step="1" value="1" style="width:86px; text-align:center;" title="回数/人数" />
       </div>
 
@@ -710,29 +748,87 @@ const SHOP_PRICE = {
    ※ 人数分が必要なもの（バッグ等）は、犯罪ページの「回数」を人数にして調整してください。
 ======================= */
 const CRIMES = {
-  "中型 - パレト銀行強盗（USBはミニゲームで消費）": {
+  "小型 - 家強盗（空き巣）": {
+    "__NOTE__": "🛒 ポータブル溶接機：受注NPCから購入",
+    "__NOTE2__": "📍 受注場所：8012",
+    "__NOTE3__": "📍 換金場所：8012"
+  },
+  "小型 - コンビニ強盗": {
+    "__NOTE__": "銃器：店員NPCをダウンさせられる、レジを解放できるもの（コンビニ購入）"
+  },
+  "小型 - ATM強盗": {
+    methods: {
+      "ATM引き抜き強盗": {
+        "__NOTE__": "共通：人質を用意するなら銃器が必要、逃走車両もあると良い",
+        "小型ロープ": 1,
+        "車両（馬力の高い車。SUV推奨）": 1
+      },
+      "ドリル強盗": {
+        "__NOTE__": "共通：人質を用意するなら銃器が必要、逃走車両もあると良い",
+        "__NOTE2__": "小型ドリルはミニゲーム成功/失敗で消費",
+        "小型ドリル": 1
+      },
+      "爆弾強盗": {
+        "__NOTE__": "共通：人質を用意するなら銃器が必要、逃走車両もあると良い",
+        "犯罪用小型C4爆弾": 1
+      },
+      "ハッキング強盗": {
+        "__NOTE__": "共通：人質を用意するなら銃器が必要、逃走車両もあると良い",
+        "__NOTE2__": "USBはミニゲーム成功/失敗で消費",
+        "犯罪用USBメモリ 1.0": 1
+      }
+    }
+  },
+  "小型 - フリーサ銀行強盗": {
+    "犯罪用USBメモリ 1.0": 1,
+    "犯罪用小型C4爆弾": 2,
+    "ダイヤモンド": 80
+  },
+  "小型 - 両替所強盗（Loud）": {
+    "__NOTE__": "🔑 両替所の鍵：ミッション中に入手",
+    "__NOTE2__": "🔫 銃器：必須",
+
+    "犯罪用USBメモリ 1.0": 1,
+    "犯罪用小型バッグ": 1,
+    "小型グラインダー": 3
+  },
+  "小型 - 両替所強盗（Silent）": {
+    "__NOTE__": "🔑 両替所の鍵：ミッション中に入手",
+    "__NOTE2__": "💾 復号化されたデバイス：ミッション中に入手",
+    "__NOTE3__": "🔫 銃器：必須",
+
+    "犯罪用USBメモリ 1.0": 1,
+    "犯罪用小型バッグ": 1,
+    "小型グラインダー": 2
+  },
+  "小型 - 輸送車両強盗": {
+    "小型バッグ": 1,
+    "小型ドリル": 2,
+    "犯罪用小型C4爆弾": 1
+  },
+  "中型 - パレト銀行強盗": {
     "犯罪用ノートパソコン グレード2": 1,
     "犯罪用中型ドリル": 3,
     "犯罪用USBメモリ 2.0": 3
   },
-  "中型 - クルーザー強盗（全回収）": {
+  "中型 - クルーザー強盗": {
     "犯罪用USBメモリ 2.0": 2,
     "犯罪用中型ドリル": 4
   },
-  "中型 - 宝石店強盗（銃器はショーケース破壊用）": {
+  "中型 - 宝石店強盗": {
     "宝石店の合鍵": 1,
     "犯罪用のバール": 1,
     "犯罪用中型カッター": 4,
     "銃器（ショーケースを壊せるもの）": 1
   },
-  "中型 - ボブキャット強盗（Loud）※回収者人数=回数": {
+  "中型 - ボブキャット強盗（Loud）": {
     "犯罪用ノートパソコン グレード2": 5,
     "犯罪用のバール": 1,
     "犯罪用中型C4爆弾": 3,
     "犯罪用USBメモリ 2.0": 3,
     "犯罪用中型バック": 1
   },
-  "中型 - ボブキャット強盗（Silent）※回収者人数=回数": {
+  "中型 - ボブキャット強盗（Silent）": {
     "犯罪用ノートパソコン グレード2": 5,
     "犯罪用のバール": 1,
     "犯罪用中型C4爆弾": 1,
@@ -740,12 +836,36 @@ const CRIMES = {
     "Smoke Grenade": 1,
     "犯罪用中型バック": 1
   },
-  "大型 - ユニオン銀行 ※回収者人数=回数": {
+  "大型 - ユニオン銀行": {
     "204号室の鍵": 1,
     "犯罪用大型バッグ": 1,
     "犯罪用大型C4爆弾": 8
   }
 };
+
+function getCrimeReq(crimeName, methodName){
+  const preset = CRIMES[crimeName] || {};
+  if (preset.methods){
+    const m = methodName || Object.keys(preset.methods)[0];
+    return preset.methods[m] || {};
+  }
+  return preset;
+}
+
+function getCrimeDot(crimeName){
+  if (crimeName.includes("大型")) return '<span class="crime-dot large">●</span>';
+  if (crimeName.includes("中型")) return '<span class="crime-dot mid">●</span>';
+  if (crimeName.includes("小型") || crimeName.includes("小規模")) return '<span class="crime-dot small">●</span>';
+  return '';
+}
+
+function getCrimeDisplayName(name){
+  return name
+    .replace(/^中型\s*-\s*/,"")
+    .replace(/^大型\s*-\s*/,"")
+    .replace(/^小型\s*-\s*/,"")
+    .replace(/^小規模犯罪\s*-\s*/,"");
+}
 
 
 
@@ -768,6 +888,12 @@ let currentPage = "craft";
 ======================= */
 const $ = (id) => document.getElementById(id);
 
+// ★ crime系はまとめる
+const crimeSelect = $("crimeSelect");
+const crimeMethod = $("crimeMethod");
+const crimeTimes  = $("crimeTimes");
+const crimeDotPreview = $("crimeDotPreview");
+
 const categorySeg = $("categorySeg");
 const itemsEl = $("items");
 const matsEl  = $("materials");
@@ -783,8 +909,70 @@ const tabCraft = $("tabCraft");
 const tabCrime = $("tabCrime");
 const craftPage = $("craftPage");
 const crimePage = $("crimePage");
-const crimeSelect = $("crimeSelect");
-const crimeTimes = $("crimeTimes");
+
+function updateMethodSelect(){
+  if(!crimeMethod || !crimeSelect) return;
+
+  const crimeName = crimeSelect.value;
+  const preset = CRIMES[crimeName] || {};
+
+  // methodsが無い犯罪は「方法」非表示
+  if(!preset.methods){
+    crimeMethod.classList.add("hidden");
+    crimeMethod.innerHTML = "";
+    return;
+  }
+
+  // methodsがある犯罪は表示して中身を詰める
+  crimeMethod.classList.remove("hidden");
+
+  const methods = Object.keys(preset.methods);
+  crimeMethod.innerHTML = methods.map(m => `<option value="${m}">${m}</option>`).join("");
+
+  // 未選択なら先頭を選ぶ
+  if(!crimeMethod.value) crimeMethod.value = methods[0];
+}
+
+function updateCrimeDotPreview(){
+  const name = crimeSelect.value;
+
+  if(!name) return;
+
+  if(name.includes("大型")){
+    crimeDotPreview.className = "crime-dot large";
+  }
+  else if(name.includes("中型")){
+    crimeDotPreview.className = "crime-dot mid";
+  }
+  else if(name.includes("小型") || name.includes("小規模")){
+    crimeDotPreview.className = "crime-dot small";
+  }
+}
+
+crimeSelect.addEventListener("change", () => {
+  updateCrimeDotPreview();
+  updateMethodSelect();
+
+  // 単体モードなら、その場で反映（後でmethod対応するための土台）
+  if (crimeSingleMode?.checked){
+    selectedCrimes.length = 0;
+    selectedCrimes.push({
+      name: crimeSelect.value,
+      method: crimeMethod?.classList.contains("hidden") ? null : crimeMethod.value,
+      times: Math.max(1, Number(crimeTimes?.value || 1) || 1)
+    });
+  }
+
+  renderCrimePlan();
+  renderCrimeItems();
+});
+
+
+// 初期表示（重要）
+setTimeout(updateCrimeDotPreview, 0);
+setTimeout(updateMethodSelect, 0);
+
+
 const crimeIncludeMaterials = $("crimeIncludeMaterials");
 const crimeSingleMode = $("crimeSingleMode");
 const addCrimeBtn = $("addCrimeBtn");
@@ -1095,8 +1283,12 @@ function computeCrimeTotals(){
   const totals = {};
   for (const c of selectedCrimes) {
     const times = Math.max(1, Number(c.times || 1) || 1);
-    const req = CRIMES[c.name] || {};
+
+    // ★ ここがポイント：method対応
+    const req = getCrimeReq(c.name, c.method);
+
     for (const [item, qty] of Object.entries(req)) {
+      if (item.startsWith("__NOTE")) continue;
       totals[item] = (totals[item] || 0) + (Number(qty || 0) * times);
     }
   }
@@ -1135,8 +1327,11 @@ function refreshCrimeFilters(){
 function renderCrimeSelect(){
   if (!crimeSelect) return;
   const names = getCrimeNames();
-  crimeSelect.innerHTML = names.map(n => `<option value="${n}">${n}</option>`).join("");
+  crimeSelect.innerHTML = names
+    .map(n => `<option value="${n}">${getCrimeDisplayName(n)}</option>`)
+    .join("");
 }
+
 
 function renderCrimePlan(){
   if (!crimePlanEl) return;
@@ -1147,6 +1342,16 @@ function renderCrimePlan(){
   }
 
   const totals = computeCrimeTotals();
+
+  // NOTE取得（複数NOTE対応）
+  const notes = selectedCrimes.flatMap(c => {
+  const crime = CRIMES[c.name] || {};
+  return Object.entries(crime)
+    .filter(([k,v]) => k.startsWith("__NOTE") && v)
+    .sort(([a],[b]) => a.localeCompare(b, "ja"))
+    .map(([k,v]) => String(v));
+  });
+  
   const lines = Object.entries(totals)
     .filter(([,v]) => (v||0) > 0)
     .sort((a,b)=> (b[1]||0) - (a[1]||0))
@@ -1157,7 +1362,7 @@ function renderCrimePlan(){
     const t = Math.max(1, Number(c.times||1)||1);
     return `
       <span class="badge" style="margin:4px 6px 0 0; display:inline-flex; align-items:center; gap:6px;">
-        ${c.name} ×${t}
+        ${getCrimeDot(c.name)}${getCrimeDisplayName(c.name)} ×${t}
         <button class="star" style="width:26px; height:26px; border-radius:10px;"
                 title="削除" onclick="removeCrime(${i})">×</button>
       </span>
@@ -1166,9 +1371,24 @@ function renderCrimePlan(){
 
   crimePlanEl.innerHTML = `
     <div style="margin-bottom:8px;">${chips}</div>
-    <div class="muted" style="margin:6px 0 10px;">合計（必要道具）</div>
-    ${lines || '<div class="muted">（合計が0です）</div>'}
-  `;
+    ${lines ? `
+      <div class="muted" style="margin:6px 0 10px;">合計（必要道具）</div>
+    ${lines}
+      ` : ""}
+    `;
+    // NOTE表示
+    if(notes.length){
+      crimePlanEl.innerHTML += `
+        <div class="box note-box" style="margin-top:10px;">
+          <div class="secTitle">📋 必要条件</div>
+          <div class="note-text">
+            ${notes.join("<br>")}
+          </div>
+        </div>
+      `;
+    }
+
+
 }
 
 window.removeCrime = function(i){
@@ -1349,16 +1569,19 @@ if (tabCraft) tabCraft.addEventListener("click", () => setPage("craft"));
 if (tabCrime) tabCrime.addEventListener("click", () => setPage("crime"));
 
 // 犯罪ページ
-if (crimeSelect) crimeSelect.addEventListener("change", () => {
-  const name = crimeSelect.value;
-  const times = Math.max(1, Number(crimeTimes?.value || 1) || 1);
+if (crimeMethod) crimeMethod.addEventListener("change", () => {
   if (crimeSingleMode?.checked){
     selectedCrimes.length = 0;
-    selectedCrimes.push({ name, times });
+    selectedCrimes.push({
+      name: crimeSelect.value,
+      method: crimeMethod.value,
+      times: Math.max(1, Number(crimeTimes?.value || 1) || 1)
+    });
   }
   renderCrimePlan();
   renderCrimeItems();
 });
+
 if (crimeTimes) crimeTimes.addEventListener("input", () => {
   if (crimeSingleMode?.checked){
     const name = crimeSelect?.value;
