@@ -510,6 +510,18 @@ const RECIPES = {
   "犯罪用ノートパソコングレード1": { "電子キット": 1 },
   "小型グラインダー": { "メタルブレード": 1 },
 
+  "ダイヤモンドドリルビット": { "ダイヤモンド": 40 },
+  "犯罪用USBメモリ 2.0": { "電子キット": 2, "金属接合剤": 5 },
+  "犯罪用ノートパソコングレード2": { "電子キット": 1, "金属接合剤": 5 },
+  "犯罪用のバール": { "鋼鉄のインゴット": 1, "金属接合剤": 5 },
+  "犯罪用中型C4爆弾": { "アルミ粉": 2, "金属接合剤": 5 },
+  "犯罪用中型カッター": { "鋼鉄のインゴット": 1, "金属接合剤": 5 },
+  "犯罪用犯罪用中型テルミット爆弾": { "アルミ粉": 2, "金属接合剤": 5 },
+  "犯罪用中型ドリル": { "ダイヤモンドドリルビット": 2, "金属接合剤": 5 },
+  "犯罪用大型C4爆弾": { "アルミ粉": 10, "万能接合剤": 2 },
+  "犯罪用大型バッグ": { "布": 20 },
+  "犯罪用中型バッグ": { "布": 1, "金属接合剤": 5 },
+
   // ガンスミス
   "フラッシュバン": { "メテオライトインゴット": 1, "銅のインゴット": 1, "鋼鉄のインゴット": 1 },
   "ポータブルEMPデバイス": { "銅のインゴット": 2, "鋼鉄のインゴット": 1, "電子キット": 1 },
@@ -571,6 +583,17 @@ const IMAGE_MAP = {
   "犯罪用ノートパソコングレード1": "crime_laptop_g1.png",
   "小型グラインダー": "grinder_small.png",
   "貴金属": "Precious Metal.png",
+  "ダイヤモンドドリルビット": "diamond_drill_bit.png",
+  "犯罪用USBメモリ 2.0": "crime_usb_memory_2_0.png",
+  "犯罪用ノートパソコングレード2": "crime_laptop_grade_2.png",
+  "犯罪用のバール": "crime_crowbar.png",
+  "犯罪用中型C4爆弾": "crime_c4_charge_medium.png",
+  "犯罪用中型カッター": "crime_cutter_medium.png",
+  "犯罪用中型テルミット爆弾": "crime_thermite_charge_medium.png",
+  "犯罪用中型ドリル": "crime_drill_medium.png",
+  "犯罪用大型C4爆弾": "crime_c4_charge_large.png",
+  "犯罪用大型バッグ": "crime_bag_large.png",
+  "犯罪用中型バッグ": "crime_bag_medium.png",
 
   "フラッシュバン": "flashbang.png",
   "ポータブルEMPデバイス": "emp_portable.png",
@@ -642,63 +665,107 @@ const ALT_RECIPES = {
 };
 
 const META = {
-  // 違法物クラフト台
+  /////////// 違法物クラフト台
+  // 爆弾系
   "犯罪用小型C4爆弾": { category: "違法物クラフト台", costYen: 1000, yield: 1 },
-  "小型サーマルドリル": { category: "違法物クラフト台", costYen: 2000, yield: 1 },
   "犯罪用小型テルミット爆弾": { category: "違法物クラフト台", costYen: 2000, yield: 1 },
-  "小型バッグ": { category: "違法物クラフト台", costYen: 100, yield: 1 },
-  "貴金属": { category: "違法物クラフト台", costYen: 0, yield: 1 },
-  "小型ドリル": { category: "違法物クラフト台", costYen: 0, yield: 1 },
-  "手錠の鍵": { category: "違法物クラフト台", costYen: 10000, yield: 1 },
-  "ビジネスバッグ用ロックピッカー": { category: "違法物クラフト台", costYen: 10000, yield: 1 },
-  "犯罪用USBメモリ 1.0": { category: "違法物クラフト台", costYen: 500, yield: 1 },
-  "ロックピック": { category: "違法物クラフト台", costYen: 0, yield: 1 },
-  "電子キット": { category: "違法物クラフト台", costYen: 0, yield: 1 },
-  "犯罪用ノートパソコングレード1": { category: "違法物クラフト台", costYen: 1500, yield: 1 },
-  "小型グラインダー": { category: "違法物クラフト台", costYen: 500, yield: 1 },
+  "犯罪用中型C4爆弾": { category: "違法物クラフト台", costYen: 2500, yield: 1 },
+  "犯罪用中型テルミット爆弾": { category: "違法物クラフト台", costYen: 3000, yield: 1 },
+  "犯罪用大型C4爆弾": { category: "違法物クラフト台", costYen: 5000, yield: 1 },
 
-  // ガンスミス
-  "フラッシュバン": { category: "ガンスミスワークベンチ", costYen: 0, yield: 2 },
-  "ポータブルEMPデバイス": { category: "ガンスミスワークベンチ", costYen: 0, yield: 2 },
-  "グレネード": { category: "ガンスミスワークベンチ", costYen: 0, yield: 2 },
-  "スモークグレネード": { category: "ガンスミスワークベンチ", costYen: 0, yield: 2 },
-  ".45 ACP弾": { category: "ガンスミスワークベンチ", costYen: 63000, yield: 100 },
-  "9mm弾": { category: "ガンスミスワークベンチ", costYen: 0, yield: 100 },
+  // ドリル・切断系
+  "小型ドリル": { category: "違法物クラフト台", costYen: 0, yield: 1 },
+  "小型サーマルドリル": { category: "違法物クラフト台", costYen: 2000, yield: 1 },
+  "犯罪用中型ドリル": { category: "違法物クラフト台", costYen: 1200, yield: 1 },
+  "ダイヤモンドドリルビット": { category: "違法物クラフト台", costYen: 50000, yield: 1 },
+  "小型グラインダー": { category: "違法物クラフト台", costYen: 500, yield: 1 },
+  "犯罪用中型カッター": { category: "違法物クラフト台", costYen: 800, yield: 1 },
+
+  // バッグ系
+  "小型バッグ": { category: "違法物クラフト台", costYen: 100, yield: 1 },
+  "犯罪用中型バッグ": { category: "違法物クラフト台", costYen: 500, yield: 1 },
+  "犯罪用大型バッグ": { category: "違法物クラフト台", costYen: 1000, yield: 1 },
+
+  // 電子機器系
+  "電子キット": { category: "違法物クラフト台", costYen: 0, yield: 1 },
+  "犯罪用USBメモリ 1.0": { category: "違法物クラフト台", costYen: 500, yield: 1 },
+  "犯罪用USBメモリ 2.0": { category: "違法物クラフト台", costYen: 600, yield: 1 },
+  "犯罪用ノートパソコングレード1": { category: "違法物クラフト台", costYen: 1500, yield: 1 },
+  "犯罪用ノートパソコングレード2": { category: "違法物クラフト台", costYen: 2000, yield: 1 },
+
+  // 侵入・解除ツール系
+  "ロックピック": { category: "違法物クラフト台", costYen: 0, yield: 1 },
+  "ビジネスバッグ用ロックピッカー": { category: "違法物クラフト台", costYen: 10000, yield: 1 },
+  "犯罪用のバール": { category: "違法物クラフト台", costYen: 600, yield: 1 },
+  "手錠の鍵": { category: "違法物クラフト台", costYen: 10000, yield: 1 },
+
+  // 素材・戦利品系
+  "貴金属": { category: "違法物クラフト台", costYen: 0, yield: 1 },
+
+  /////////// ガンスミス
+  // 銃本体
   "ピストル": { category: "ガンスミスワークベンチ", costYen: 100000, yield: 1 },
-  "頑丈な防弾チョッキ": { category: "ガンスミスワークベンチ", costYen: 50000, yield: 1 },
   "Micro SMG": { category: "ガンスミスワークベンチ", costYen: 200000, yield: 1 },
+
+  // 防具
+  "頑丈な防弾チョッキ": { category: "ガンスミスワークベンチ", costYen: 50000, yield: 1 },
+
+  // 投擲武器・特殊デバイス
+  "フラッシュバン": { category: "ガンスミスワークベンチ", costYen: 0, yield: 2 },
+  "スモークグレネード": { category: "ガンスミスワークベンチ", costYen: 0, yield: 2 },
+  "グレネード": { category: "ガンスミスワークベンチ", costYen: 0, yield: 2 },
+  "ポータブルEMPデバイス": { category: "ガンスミスワークベンチ", costYen: 0, yield: 2 },
+
+  // 弾薬
+  "9mm弾": { category: "ガンスミスワークベンチ", costYen: 0, yield: 100 },
+  ".45 ACP弾": { category: "ガンスミスワークベンチ", costYen: 63000, yield: 100 },
+
+  // アタッチメント
+  "フラッシュライト": { category: "ガンスミスワークベンチ", costYen: 5000, yield: 1 },
   "サプレッサー": { category: "ガンスミスワークベンチ", costYen: 5000, yield: 1 },
   "タクティカルサプレッサー": { category: "ガンスミスワークベンチ", costYen: 5000, yield: 1 },
-  "フラッシュライト": { category: "ガンスミスワークベンチ", costYen: 5000, yield: 1 },
 
-  // 化学作業台
-  "バックパックLv2": { category: "化学作業台", costYen: 30000, yield: 1 },
+  /////////// 化学作業台
+  // 作業台（テーブル類）
   "化学薬品クラフトテーブル": { category: "化学作業台", costYen: 50000000, yield: 1 },
-  "油": { category: "化学作業台", costYen: 0, yield: 1 },
-  "メタルブレード": { category: "化学作業台", costYen: 0, yield: 1 },
-  "医療キット": { category: "化学作業台", costYen: 10000, yield: 1 },
-  "鉄の歯車": { category: "化学作業台", costYen: 0, yield: 1 },
-  "バックパックLv1": { category: "化学作業台", costYen: 0, yield: 1 },
-  "スプレーリムーバー": { category: "化学作業台", costYen: 0, yield: 1 },
-  "スプレー": { category: "化学作業台", costYen: 0, yield: 1 },
-  "車両引き換えゴールドチケット": { category: "化学作業台", costYen: 0, yield: 1 },
-  "万能接合剤": { category: "化学作業台", costYen: 10000, yield: 1 },
-  "ダッフルバッグ": { category: "化学作業台", costYen: 100000, yield: 1 },
   "電子機器クラフトテーブル": { category: "化学作業台", costYen: 50000000, yield: 1 },
-  "ダイヤモンド": { category: "化学作業台", costYen: 0, yield: 5 },
-  "金属接合剤": { category: "化学作業台", costYen: 5000, yield: 1 },
-  "包帯": { category: "化学作業台", costYen: 0, yield: 1 },
-  "SMGボディ": { category: "化学作業台", costYen: 0, yield: 1 },
-  "ボイステープ": { category: "化学作業台", costYen: 0, yield: 1 },
-  "ピストルボディ": { category: "化学作業台", costYen: 100000, yield: 1 },
-  "グラスファイバー": { category: "化学作業台", costYen: 0, yield: 1 },
   "武器クラフトテーブル": { category: "化学作業台", costYen: 50000000, yield: 1 },
-  "サボテンクリーム": { category: "化学作業台", costYen: 0, yield: 1 },
+
+  // バッグ類
+  "バックパックLv1": { category: "化学作業台", costYen: 0, yield: 1 },
+  "バックパックLv2": { category: "化学作業台", costYen: 30000, yield: 1 },
+  "ダッフルバッグ": { category: "化学作業台", costYen: 100000, yield: 1 },
   "弾薬バッグ": { category: "化学作業台", costYen: 10000, yield: 1 },
-  "鉄のバネ": { category: "化学作業台", costYen: 0, yield: 1 },
   "お着替えバッグ": { category: "化学作業台", costYen: 0, yield: 1 },
 
-  // 薬物製造台
+  // 医療・回復系
+  "医療キット": { category: "化学作業台", costYen: 10000, yield: 1 },
+  "包帯": { category: "化学作業台", costYen: 0, yield: 1 },
+  "サボテンクリーム": { category: "化学作業台", costYen: 0, yield: 1 },
+
+  // 武器パーツ
+  "ピストルボディ": { category: "化学作業台", costYen: 100000, yield: 1 },
+  "SMGボディ": { category: "化学作業台", costYen: 0, yield: 1 },
+
+  // 接合剤・ケミカル類
+  "金属接合剤": { category: "化学作業台", costYen: 5000, yield: 1 },
+  "万能接合剤": { category: "化学作業台", costYen: 10000, yield: 1 },
+
+  // 素材・部品
+  "油": { category: "化学作業台", costYen: 0, yield: 1 },
+  "グラスファイバー": { category: "化学作業台", costYen: 0, yield: 1 },
+  "メタルブレード": { category: "化学作業台", costYen: 0, yield: 1 },
+  "鉄の歯車": { category: "化学作業台", costYen: 0, yield: 1 },
+  "鉄のバネ": { category: "化学作業台", costYen: 0, yield: 1 },
+
+  // その他
+  "スプレー": { category: "化学作業台", costYen: 0, yield: 1 },
+  "スプレーリムーバー": { category: "化学作業台", costYen: 0, yield: 1 },
+  "ボイステープ": { category: "化学作業台", costYen: 0, yield: 1 },
+  "ダイヤモンド": { category: "化学作業台", costYen: 0, yield: 5 },
+  "車両引き換えゴールドチケット": { category: "化学作業台", costYen: 0, yield: 1 },
+
+  /////////// 薬物製造台
   "【麻薬】ブルーアウト": { category: "薬物製造台", costYen: 0, yield: 1 },
   "【麻薬】レッドスペクター": { category: "薬物製造台", costYen: 0, yield: 1 },
   "【麻薬】ホワイトマッド": { category: "薬物製造台", costYen: 0, yield: 1 },
