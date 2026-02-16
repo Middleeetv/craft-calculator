@@ -342,8 +342,94 @@
     font-size:13px;
     line-height:1.6;
     color:#ffcc66;
-}
+    }
 
+    /* ===== 犯罪プリセットUI統一 ===== */
+
+    /* 行レイアウト（1行目・2行目） */
+    .crimeRow{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:6px;
+    }
+
+    /* select統一サイズ */
+    .crimeSelect{
+      width:200px;
+      height:34px;
+      padding:4px 10px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background:rgba(0,0,0,.25);
+      color:var(--text);
+      font-size:13px;
+    }
+
+    /* 方法select：非表示でも幅維持 */
+    .crimeMethod.hidden{
+      visibility:hidden;
+    }
+
+    /* 回数入力統一 */
+    .crimeInput{
+      width:80px;
+      height:34px;
+      padding: 0 10px;
+      text-align:center;
+
+      border-radius:12px;              /* ←角丸 */
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+      color:var(--text);
+      outline:none;
+      font-size:13px;
+    }
+
+    /* チップ高さ統一（犯罪ページ内だけ） */
+    #crimePage .toolbar .chip{
+      height:34px; /* ←後段で34pxにしてるならここも34に統一 */
+      display:inline-flex;
+      align-items:center;
+    }
+
+    /* 犯罪ツールバー内のchip文字を少し大きく */
+    #crimePage .toolbar .chip{
+      font-size:14px;
+      padding:6px 10px;   /* 文字大きくした分だけ余白も微調整 */
+    }
+
+    /* 犯罪ツールバーのselectとinputの文字サイズを大きく */
+    #crimePage .toolbar select,
+    #crimePage .toolbar input{
+      font-size:14px;
+    }
+
+    /* select / input / chip の高さと見た目を完全統一 */
+    #crimePage .toolbar select,
+    #crimePage .toolbar input,
+    #crimePage .toolbar .chip{
+      height:34px;
+      border-radius:12px;
+      display:inline-flex;
+      align-items:center;
+    }
+
+    /* 数字入力の見た目をchipと統一 */
+    #crimePage .toolbar input[type="number"]{
+      background:rgba(255,255,255,.03);
+      border:1px solid var(--line);
+      color:var(--text);
+      padding:0 10px;
+    }
+
+    /* selectの背景統一 */
+    #crimePage .toolbar select{
+      background:rgba(0,0,0,.25);
+      border:1px solid var(--line);
+      padding:0 10px;
+    }
 
   </style>
 </head>
@@ -389,6 +475,11 @@
 
     <div class="content">
       <div class="box">
+        <div class="secTitle">必要素材（合計）</div>
+        <div id="materials"></div>
+      </div>
+
+      <div class="box">
         <div class="secTitle">料金合計（クラフト料金）</div>
         <div class="kv"><span>合計</span><b class="yen" id="totalYen">0円</b></div>
         <div class="muted" id="yenBreakdown"></div>
@@ -406,11 +497,6 @@
         <div class="muted" id="shopItemsBreakdown"></div>
       </div>
 
-      <div class="box">
-        <div class="secTitle">必要素材（合計）</div>
-        <div id="materials"></div>
-      </div>
-
       <details id="altDetails">
         <summary>代替レシピ（手動で選択できます）</summary>
         <div id="altBreakdowns"></div>
@@ -426,34 +512,42 @@
   <!-- LEFT -->
   <div class="card">
     <div class="toolbar">
-      <div class="seg">
-        <div class="title">犯罪プリセット</div>
-      </div>
 
-      <div class="crimebar" style="display:flex; gap:8px; align-items:center; min-width:260px; flex:0 0 360px;">
-      <div style="display:flex; align-items:center; gap:8px;">
-      <span id="crimeDotPreview" class="crime-dot mid">●</span>
+  <!-- タイトル -->
+  <div class="seg" style="display:flex; align-items:center; padding:6px 12px;">
+    <div class="title" style="margin:0;">犯罪プリセット</div>
+  </div>
 
-      <select id="crimeSelect" aria-label="犯罪プリセット"
-        style="width:100%; padding:10px 12px; border-radius:12px; border:1px solid var(--line); background:rgba(0,0,0,.25); color:var(--text); outline:none; font-size:12px;">
-      </select>
-      <select id="crimeMethod" aria-label="方法" class="hidden"
-        style="width:100%; max-width:160px; padding:10px 12px; border-radius:12px; border:1px solid var(--line);
-          background:rgba(0,0,0,.25); color:var(--text); outline:none; font-size:12px;">
-      </select>
+  <!-- 1行目：プリセット選択 -->
+  <div class="crimeRow">
+    <span id="crimeDotPreview" class="crime-dot mid">●</span>
 
-      
-    </div>
-        <input id="crimeTimes" class="chip" type="number" min="1" step="1" value="1" style="width:86px; text-align:center;" title="回数/人数" />
-      </div>
+    <select id="crimeSelect" class="crimeSelect"></select>
 
-      <label class="chip"><input id="crimeIncludeMaterials" type="checkbox" checked /> 素材も含める</label>
-      <label class="chip"><input id="crimeSingleMode" type="checkbox" checked /> 単体モード</label>
-      <button id="addCrimeBtn" class="chip" type="button">（複数用）追加</button>
-      <button id="clearCrimeBtn" class="chip" type="button">セットクリア</button>
+    <!-- 方法は常に場所を確保（hiddenでも幅維持） -->
+    <select id="crimeMethod" class="crimeSelect crimeMethod"></select>
+  </div>
 
-      <div class="hint">※ 「回数」は <b>人数分（バッグなど）</b> を増やしたい時にも使えます。</div>
-    </div>
+  <!-- 2行目：回数・チェック・ボタン -->
+  <div class="crimeRow">
+    <input id="crimeTimes" class="crimeInput" type="number" min="1" step="1" value="1"/>
+
+    <label class="chip"><input id="crimeIncludeMaterials" type="checkbox" checked /> 素材も含める</label>
+
+    <label class="chip"><input id="crimeSingleMode" type="checkbox" checked /> 単体モード</label>
+
+    <button id="addCrimeBtn" class="chip" type="button">（複数用）追加</button>
+
+    <button id="clearCrimeBtn" class="chip" type="button">セットクリア</button>
+  </div>
+
+  <!-- 注意文 -->
+  <div class="hint">
+    ※ 「回数」は <b>人数分（バッグなど）</b> を増やしたい時にも使えます。
+  </div>
+
+</div>
+
 
     <div class="content">
       <div id="crimeItems" class="list"></div>
@@ -484,420 +578,476 @@
 </div>
 
 <script>
-/* =======================
-   データ
-======================= */
-const CATEGORIES = [
-  "違法物クラフト台",
-  "ガンスミスワークベンチ",
-  "化学作業台",
-  "薬物製造台"
-];
+  /* =======================
+  データ
+  ======================= */
+  const CATEGORIES = [
+    "違法物クラフト台",
+    "ガンスミスワークベンチ",
+    "化学作業台",
+    "薬物製造台"
+  ];
 
-const RECIPES = {
-  // 違法物クラフト台
-  "犯罪用小型C4爆弾": { "アルミ粉": 1 },
-  "小型サーマルドリル": { "ダイヤモンドドリルビット": 2 },
-  "犯罪用小型テルミット爆弾": { "アルミ粉": 1 },
-  "小型バッグ": { "布": 20, "小型ロープ": 3 },
-  "貴金属": { }, // ALTで展開
-  "小型ドリル": { "ダイヤモンドドリルビット": 1 },
-  "手錠の鍵": { "鉄のインゴット": 3 },
-  "ビジネスバッグ用ロックピッカー": { "鉄のインゴット": 3 },
-  "犯罪用USBメモリ 1.0": { "電子キット": 1 },
-  "ロックピック": { "鉄のインゴット": 1 },
-  "電子キット": { "貴金属": 1, "銅のインゴット": 1 }, // ALTもあり
-  "犯罪用ノートパソコングレード1": { "電子キット": 1 },
-  "小型グラインダー": { "メタルブレード": 1 },
+  const RECIPES = {
+    // 違法物クラフト台
+    "犯罪用小型C4爆弾": { "アルミ粉": 1 },
+    "小型サーマルドリル": { "ダイヤモンドドリルビット": 2 },
+    "犯罪用小型テルミット爆弾": { "アルミ粉": 1 },
+    "小型バッグ": { "布": 20, "小型ロープ": 3 },
+    "貴金属": { }, // ALTで展開
+    "小型ドリル": { "ダイヤモンドドリルビット": 1 },
+    "手錠の鍵": { "鉄のインゴット": 3 },
+    "ビジネスバッグ用ロックピッカー": { "鉄のインゴット": 3 },
+    "犯罪用USBメモリ 1.0": { "電子キット": 1 },
+    "ロックピック": { "鉄のインゴット": 1 },
+    "電子キット": { "貴金属": 1, "銅のインゴット": 1 }, // ALTもあり
+    "犯罪用ノートパソコングレード1": { "電子キット": 1 },
+    "小型グラインダー": { "メタルブレード": 1 },
 
-  "ダイヤモンドドリルビット": { "ダイヤモンド": 40 },
-  "犯罪用USBメモリ 2.0": { "電子キット": 2, "金属接合剤": 5 },
-  "犯罪用ノートパソコングレード2": { "電子キット": 1, "金属接合剤": 5 },
-  "犯罪用のバール": { "鋼鉄のインゴット": 1, "金属接合剤": 5 },
-  "犯罪用中型C4爆弾": { "アルミ粉": 2, "金属接合剤": 5 },
-  "犯罪用中型カッター": { "鋼鉄のインゴット": 1, "金属接合剤": 5 },
-  "犯罪用中型テルミット爆弾": { "アルミ粉": 2, "金属接合剤": 5 },
-  "犯罪用中型ドリル": { "ダイヤモンドドリルビット": 2, "金属接合剤": 5 },
-  "犯罪用大型C4爆弾": { "アルミ粉": 10, "万能接合剤": 2 },
-  "犯罪用大型バッグ": { "布": 20 },
-  "犯罪用中型バッグ": { "布": 1, "金属接合剤": 5 },
+    "ダイヤモンドドリルビット": { "ダイヤモンド": 40 },
+    "犯罪用USBメモリ 2.0": { "電子キット": 2, "金属接合剤": 5 },
+    "犯罪用ノートパソコングレード2": { "電子キット": 1, "金属接合剤": 5 },
+    "犯罪用のバール": { "鋼鉄のインゴット": 1, "金属接合剤": 5 },
+    "犯罪用中型C4爆弾": { "アルミ粉": 2, "金属接合剤": 5 },
+    "犯罪用中型カッター": { "鋼鉄のインゴット": 1, "金属接合剤": 5 },
+    "犯罪用中型テルミット爆弾": { "アルミ粉": 2, "金属接合剤": 5 },
+    "犯罪用中型ドリル": { "ダイヤモンドドリルビット": 2, "金属接合剤": 5 },
+    "犯罪用大型C4爆弾": { "アルミ粉": 10, "万能接合剤": 2 },
+    "犯罪用大型バッグ": { "布": 20 },
+    "犯罪用中型バッグ": { "布": 1, "金属接合剤": 5 },
 
-  // ガンスミス
-  "フラッシュバン": { "メテオライトインゴット": 1, "銅のインゴット": 1, "鋼鉄のインゴット": 1 },
-  "ポータブルEMPデバイス": { "銅のインゴット": 2, "鋼鉄のインゴット": 1, "電子キット": 1 },
-  "グレネード": { "銅のインゴット": 1, "鋼鉄のインゴット": 1 },
-  "ピストル": { "ピストルボディ": 1, "鉄のバネ": 5 },
-  "頑丈な防弾チョッキ": { "布": 30, "カーボンファイバー": 30, "貴金属": 5 },
-  "Micro SMG": { "SMGボディ": 1, "鉄のバネ": 5, "鉄の歯車": 1 },
-  ".45 ACP弾": { "鋼鉄のインゴット": 6 },
-  "9mm弾": { "鋼鉄のインゴット": 3 },
-  "サプレッサー": { "カーボンファイバー": 5, "グラスファイバー": 10, "鉄のインゴット": 10 },
-  "スモークグレネード": { "メテオライトインゴット": 1, "銅のインゴット": 2, "鋼鉄のインゴット": 1 },
-  "タクティカルサプレッサー": { "カーボンファイバー": 5, "グラスファイバー": 10, "鉄のインゴット": 10 },
-  "フラッシュライト": { "グラスファイバー": 10, "電子キット": 5 },
+    // ガンスミス
+    "フラッシュバン": { "メテオライトインゴット": 1, "銅のインゴット": 1, "鋼鉄のインゴット": 1 },
+    "ポータブルEMPデバイス": { "銅のインゴット": 2, "鋼鉄のインゴット": 1, "電子キット": 1 },
+    "グレネード": { "銅のインゴット": 1, "鋼鉄のインゴット": 1 },
+    "ピストル": { "ピストルボディ": 1, "鉄のバネ": 5 },
+    "頑丈な防弾チョッキ": { "布": 30, "カーボンファイバー": 30, "貴金属": 5 },
+    "Micro SMG": { "SMGボディ": 1, "鉄のバネ": 5, "鉄の歯車": 1 },
+    ".45 ACP弾": { "鋼鉄のインゴット": 6 },
+    "9mm弾": { "鋼鉄のインゴット": 3 },
+    "サプレッサー": { "カーボンファイバー": 5, "グラスファイバー": 10, "鉄のインゴット": 10 },
+    "スモークグレネード": { "メテオライトインゴット": 1, "銅のインゴット": 2, "鋼鉄のインゴット": 1 },
+    "タクティカルサプレッサー": { "カーボンファイバー": 5, "グラスファイバー": 10, "鉄のインゴット": 10 },
+    "フラッシュライト": { "グラスファイバー": 10, "電子キット": 5 },
 
-  // 化学作業台
-  "バックパックLv2": { "布": 5, "小型バッグ": 10 },
-  "化学薬品クラフトテーブル": { "アサルトライフルボディ": 20, "ダイヤモンド": 50 },
-  "油": { }, // ALT
-  "メタルブレード": { "鉄のインゴット": 1, "鋼鉄のインゴット": 1 },
-  "医療キット": { "布": 1, "ライム": 1, "鋼鉄のインゴット": 1 },
-  "鉄の歯車": { "鉄のインゴット": 2, "鋼鉄のインゴット": 1 },
-  "バックパックLv1": { "布": 1, "小型バッグ": 1 },
-  "スプレーリムーバー": { "布": 2 },
-  "スプレー": { "エメラルド": 1, "サファイア": 1 },
-  "車両引き換えゴールドチケット": { "車両ガチャの破片": 30 },
-  "万能接合剤": { "ダイヤモンド": 100, "金属接合剤": 5 },
-  "ダッフルバッグ": { "布": 10, "エメラルド": 80, "小型バッグ": 30, "小型ロープ": 10 },
-  "電子機器クラフトテーブル": { "アサルトライフルボディ": 20, "ダイヤモンド": 50 },
-  "ダイヤモンド": { "未加工ダイヤモンド": 5 }, // yield 5
-  "金属接合剤": { "ダイヤモンド": 30 },
-  "包帯": { "布": 1 },
-  "SMGボディ": { }, // ALT
-  "ボイステープ": { "電子キット": 1 },
-  "ピストルボディ": { "カーボンファイバー": 25 },
-  "グラスファイバー": { "ガラス": 1 },
-  "武器クラフトテーブル": { "アサルトボディ": 20, "ダイヤモンド": 50 },
-  "サボテンクリーム": { "サボテンの果実": 1 },
-  "弾薬バッグ": { "布": 10, "小型バッグ": 10 },
-  "鉄のバネ": { "鉄のインゴット": 1, "鋼鉄のインゴット": 2 },
-  "お着替えバッグ": { "布": 20, "小型バッグ": 1 },
+    // 化学作業台
+    "バックパックLv2": { "布": 5, "小型バッグ": 10 },
+    "化学薬品クラフトテーブル": { "アサルトライフルボディ": 20, "ダイヤモンド": 50 },
+    "油": { }, // ALT
+    "メタルブレード": { "鉄のインゴット": 1, "鋼鉄のインゴット": 1 },
+    "医療キット": { "布": 1, "ライム": 1, "鋼鉄のインゴット": 1 },
+    "鉄の歯車": { "鉄のインゴット": 2, "鋼鉄のインゴット": 1 },
+    "バックパックLv1": { "布": 1, "小型バッグ": 1 },
+    "スプレーリムーバー": { "布": 2 },
+    "スプレー": { "エメラルド": 1, "サファイア": 1 },
+    "車両引き換えゴールドチケット": { "車両ガチャの破片": 30 },
+    "万能接合剤": { "ダイヤモンド": 100, "金属接合剤": 5 },
+    "ダッフルバッグ": { "布": 10, "エメラルド": 80, "小型バッグ": 30, "小型ロープ": 10 },
+    "電子機器クラフトテーブル": { "アサルトライフルボディ": 20, "ダイヤモンド": 50 },
+    "ダイヤモンド": { "未加工ダイヤモンド": 5 }, // yield 5
+    "金属接合剤": { "ダイヤモンド": 30 },
+    "包帯": { "布": 1 },
+    "SMGボディ": { }, // ALT
+    "ボイステープ": { "電子キット": 1 },
+    "ピストルボディ": { "カーボンファイバー": 25 },
+    "グラスファイバー": { "ガラス": 1 },
+    "武器クラフトテーブル": { "アサルトライフルボディ": 20, "ダイヤモンド": 50 },
+    "サボテンクリーム": { "サボテンの果実": 1 },
+    "弾薬バッグ": { "布": 10, "小型バッグ": 10 },
+    "鉄のバネ": { "鉄のインゴット": 1, "鋼鉄のインゴット": 2 },
+    "お着替えバッグ": { "布": 20, "小型バッグ": 1 },
 
-  // 薬物製造台
-  "【麻薬】ブルーアウト": { "ブルーフラワー": 1, "金のインゴット": 1 },
-  "【麻薬】レッドスペクター": { "レッドフラワー": 1, "銅のインゴット": 1 },
-  "【麻薬】ホワイトマッド": { "ホワイトフラワー": 1, "銀のインゴット": 1 },
-};
+    // 薬物製造台
+    "【麻薬】ブルーアウト": { "ブルーフラワー": 1, "金のインゴット": 1 },
+    "【麻薬】レッドスペクター": { "レッドフラワー": 1, "銅のインゴット": 1 },
+    "【麻薬】ホワイトマッド": { "ホワイトフラワー": 1, "銀のインゴット": 1 },
+  };
 
-const IMAGE_MAP = {
-  "犯罪用小型C4爆弾": "c4_small.png",
-  "小型サーマルドリル": "thermal_drill_small.png",
-  "犯罪用小型テルミット爆弾": "thermite_small.png",
-  "小型バッグ": "small_bag.png",
-  "小型ドリル": "drill_small.png",
-  "手錠の鍵": "handcuff_key.png",
-  "ビジネスバッグ用ロックピッカー": "lockpick.png",
-  "犯罪用USBメモリ 1.0": "crime_usb_1.png",
-  "ロックピック": "lockpick.png",
-  "電子キット": "electronic_kit.png",
-  "犯罪用ノートパソコングレード1": "crime_laptop_g1.png",
-  "小型グラインダー": "grinder_small.png",
-  "貴金属": "Precious Metal.png",
-  "ダイヤモンドドリルビット": "diamond_drill_bit.png",
-  "犯罪用USBメモリ 2.0": "crime_usb_memory_2_0.png",
-  "犯罪用ノートパソコングレード2": "crime_laptop_grade_2.png",
-  "犯罪用のバール": "crime_crowbar.png",
-  "犯罪用中型C4爆弾": "crime_c4_charge_medium.png",
-  "犯罪用中型カッター": "crime_cutter_medium.png",
-  "犯罪用中型テルミット爆弾": "crime_thermite_charge_medium.png",
-  "犯罪用中型ドリル": "crime_drill_medium.png",
-  "犯罪用大型C4爆弾": "crime_c4_charge_large.png",
-  "犯罪用大型バッグ": "crime_bag_large.png",
-  "犯罪用中型バッグ": "crime_bag_medium.png",
+  const IMAGE_MAP = {
+    "犯罪用小型C4爆弾": "c4_small.png",
+    "小型サーマルドリル": "thermal_drill_small.png",
+    "犯罪用小型テルミット爆弾": "thermite_small.png",
+    "小型バッグ": "small_bag.png",
+    "小型ドリル": "drill_small.png",
+    "手錠の鍵": "handcuff_key.png",
+    "ビジネスバッグ用ロックピッカー": "lockpick.png",
+    "犯罪用USBメモリ 1.0": "crime_usb_1.png",
+    "ロックピック": "lockpick.png",
+    "電子キット": "electronic_kit.png",
+    "犯罪用ノートパソコングレード1": "crime_laptop_g1.png",
+    "小型グラインダー": "grinder_small.png",
+    "貴金属": "Precious Metal.png",
+    "ダイヤモンドドリルビット": "diamond_drill_bit.png",
+    "犯罪用USBメモリ 2.0": "crime_usb_memory_2_0.png",
+    "犯罪用ノートパソコングレード2": "crime_laptop_grade_2.png",
+    "犯罪用のバール": "crime_crowbar.png",
+    "犯罪用中型C4爆弾": "crime_c4_charge_medium.png",
+    "犯罪用中型カッター": "crime_cutter_medium.png",
+    "犯罪用中型テルミット爆弾": "crime_thermite_charge_medium.png",
+    "犯罪用中型ドリル": "crime_drill_medium.png",
+    "犯罪用大型C4爆弾": "crime_c4_charge_large.png",
+    "犯罪用大型バッグ": "crime_bag_large.png",
+    "犯罪用中型バッグ": "crime_bag_medium.png",
 
-  "フラッシュバン": "flashbang.png",
-  "ポータブルEMPデバイス": "emp_portable.png",
-  "グレネード": "grenade.png",
-  "ピストル": "pistol.png",
-  "頑丈な防弾チョッキ": "heavy_armor.png",
-  "Micro SMG": "micro_smg.png",
-  ".45 ACP弾": "ammo_45acp.png",
-  "9mm弾": "ammo_9mm.png",
-  "サプレッサー": "suppressor.png",
-  "スモークグレネード": "smoke_grenade.png",
-  "タクティカルサプレッサー": "suppressor.png",
-  "フラッシュライト": "flashlight.png",
+    "フラッシュバン": "flashbang.png",
+    "ポータブルEMPデバイス": "emp_portable.png",
+    "グレネード": "grenade.png",
+    "ピストル": "pistol.png",
+    "頑丈な防弾チョッキ": "heavy_armor.png",
+    "Micro SMG": "micro_smg.png",
+    ".45 ACP弾": "ammo_45acp.png",
+    "9mm弾": "ammo_9mm.png",
+    "サプレッサー": "suppressor.png",
+    "スモークグレネード": "smoke_grenade.png",
+    "タクティカルサプレッサー": "suppressor.png",
+    "フラッシュライト": "flashlight.png",
 
-  "バックパックLv2": "backpack_lv2.png",
-  "化学薬品クラフトテーブル": "chemical_crafting_table.png",
-  "油": "oil.png",
-  "メタルブレード": "metal_blade.png",
-  "医療キット": "medkit.png",
-  "鉄の歯車": "gear_iron.png",
-  "バックパックLv1": "backpack_lv1.png",
-  "スプレーリムーバー": "spray_remover.png",
-  "スプレー": "spray.png",
-  "車両引き換えゴールドチケット": "gold_ticket.png",
-  "万能接合剤": "universal_adhesive.png",
-  "ダッフルバッグ": "duffle_bag.png",
-  "電子機器クラフトテーブル": "electronics_crafting_table.png",
-  "ダイヤモンド": "diamond.png",
-  "金属接合剤": "metal_adhesive.png",
-  "包帯": "bandage.png",
-  "SMGボディ": "smg_body.png",
-  "ボイステープ": "voice_tape.png",
-  "ピストルボディ": "pistol_body.png",
-  "グラスファイバー": "glass_fiber.png",
-  "武器クラフトテーブル": "weapon_crafting_table.png",
-  "サボテンクリーム": "cactus_cream.png",
-  "弾薬バッグ": "ammo_bag.png",
-  "鉄のバネ": "spring_iron.png",
-  "お着替えバッグ": "outfit_bag.png",
+    "バックパックLv2": "backpack_lv2.png",
+    "化学薬品クラフトテーブル": "chemical_crafting_table.png",
+    "油": "oil.png",
+    "メタルブレード": "metal_blade.png",
+    "医療キット": "medkit.png",
+    "鉄の歯車": "gear_iron.png",
+    "バックパックLv1": "backpack_lv1.png",
+    "スプレーリムーバー": "spray_remover.png",
+    "スプレー": "spray.png",
+    "車両引き換えゴールドチケット": "gold_ticket.png",
+    "万能接合剤": "universal_adhesive.png",
+    "ダッフルバッグ": "duffle_bag.png",
+    "電子機器クラフトテーブル": "electronics_crafting_table.png",
+    "ダイヤモンド": "diamond.png",
+    "金属接合剤": "metal_adhesive.png",
+    "包帯": "bandage.png",
+    "SMGボディ": "smg_body.png",
+    "ボイステープ": "voice_tape.png",
+    "ピストルボディ": "pistol_body.png",
+    "グラスファイバー": "glass_fiber.png",
+    "武器クラフトテーブル": "weapon_crafting_table.png",
+    "サボテンクリーム": "cactus_cream.png",
+    "弾薬バッグ": "ammo_bag.png",
+    "鉄のバネ": "spring_iron.png",
+    "お着替えバッグ": "outfit_bag.png",
 
-  "【麻薬】ブルーアウト": "drug_blueout.png",
-  "【麻薬】レッドスペクター": "drug_redspecter.png",
-  "【麻薬】ホワイトマッド": "drug_whitemud.png"
-};
+    "【麻薬】ブルーアウト": "drug_blueout.png",
+    "【麻薬】レッドスペクター": "drug_redspecter.png",
+    "【麻薬】ホワイトマッド": "drug_whitemud.png"
+  };
 
-function getImagePath(itemName) {
-  const file = IMAGE_MAP[itemName];
-  if (!file) return null;
-  return `images/${file}`;
-}
+  function getImagePath(itemName) {
+    const file = IMAGE_MAP[itemName];
+    if (!file) return null;
+    return `images/${file}`;
+  }
 
-const ALT_RECIPES = {
-  "貴金属": [
-    { name: "金のインゴットで作る", recipe: { "金のインゴット": 2 }, yield: 1, costYen: 0 },
-    { name: "メテオライトインゴットで作る", recipe: { "メテオライトインゴット": 1 }, yield: 1, costYen: 0 },
-  ],
-  "電子キット": [
-    { name: "通常（1個）", recipe: { "貴金属": 1, "銅のインゴット": 1 }, yield: 1, costYen: 0 },
-    { name: "量産（10個できる）", recipe: { "貴金属": 10, "銅のインゴット": 10 }, yield: 10, costYen: 0 },
-  ],
-  "油": [
-    { name: "トウモロコシ袋詰め（5個できる）", recipe: { "トウモロコシの袋詰め": 1 }, yield: 5, costYen: 0 },
-    { name: "ミルク箱詰め（2個できる）", recipe: { "ミルクの箱詰め": 1 }, yield: 2, costYen: 0 },
-  ],
-  "SMGボディ": [
-    { name: "ピストルボディ3個で作る", recipe: { "ピストルボディ": 3 }, yield: 1, costYen: 100000 },
-    { name: "カーボンファイバー50で作る", recipe: { "カーボンファイバー": 50 }, yield: 1, costYen: 100000 },
-  ],
-};
+  const ALT_RECIPES = {
+    "貴金属": [
+      { name: "金のインゴットで作る", recipe: { "金のインゴット": 2 }, yield: 1, costYen: 0 },
+      { name: "メテオライトインゴットで作る", recipe: { "メテオライトインゴット": 1 }, yield: 1, costYen: 0 },
+    ],
+    "電子キット": [
+      { name: "通常（1個）", recipe: { "貴金属": 1, "銅のインゴット": 1 }, yield: 1, costYen: 0 },
+      { name: "量産（10個できる）", recipe: { "貴金属": 10, "銅のインゴット": 10 }, yield: 10, costYen: 0 },
+    ],
+    "油": [
+      { name: "トウモロコシ袋詰め（5個できる）", recipe: { "トウモロコシの袋詰め": 1 }, yield: 5, costYen: 0 },
+      { name: "ミルク箱詰め（2個できる）", recipe: { "ミルクの箱詰め": 1 }, yield: 2, costYen: 0 },
+    ],
+    "SMGボディ": [
+      { name: "ピストルボディ3個で作る", recipe: { "ピストルボディ": 3 }, yield: 1, costYen: 100000 },
+      { name: "カーボンファイバー50で作る", recipe: { "カーボンファイバー": 50 }, yield: 1, costYen: 100000 },
+    ],
+  };
 
-const META = {
-  /////////// 違法物クラフト台
-  // 爆弾系
-  "犯罪用小型C4爆弾": { category: "違法物クラフト台", costYen: 1000, yield: 1 },
-  "犯罪用小型テルミット爆弾": { category: "違法物クラフト台", costYen: 2000, yield: 1 },
-  "犯罪用中型C4爆弾": { category: "違法物クラフト台", costYen: 2500, yield: 1 },
-  "犯罪用中型テルミット爆弾": { category: "違法物クラフト台", costYen: 3000, yield: 1 },
-  "犯罪用大型C4爆弾": { category: "違法物クラフト台", costYen: 5000, yield: 1 },
+  const META = {
+    /////////// 違法物クラフト台
+    // 爆弾系
+    "犯罪用小型C4爆弾": { category: "違法物クラフト台", costYen: 1000, yield: 1 },
+    "犯罪用小型テルミット爆弾": { category: "違法物クラフト台", costYen: 2000, yield: 1 },
+    "犯罪用中型C4爆弾": { category: "違法物クラフト台", costYen: 2500, yield: 1 },
+    "犯罪用中型テルミット爆弾": { category: "違法物クラフト台", costYen: 3000, yield: 1 },
+    "犯罪用大型C4爆弾": { category: "違法物クラフト台", costYen: 5000, yield: 1 },
 
-  // ドリル・切断系
-  "小型ドリル": { category: "違法物クラフト台", costYen: 0, yield: 1 },
-  "小型サーマルドリル": { category: "違法物クラフト台", costYen: 2000, yield: 1 },
-  "犯罪用中型ドリル": { category: "違法物クラフト台", costYen: 1200, yield: 1 },
-  "ダイヤモンドドリルビット": { category: "違法物クラフト台", costYen: 50000, yield: 1 },
-  "小型グラインダー": { category: "違法物クラフト台", costYen: 500, yield: 1 },
-  "犯罪用中型カッター": { category: "違法物クラフト台", costYen: 800, yield: 1 },
+    // ドリル・切断系
+    "小型ドリル": { category: "違法物クラフト台", costYen: 0, yield: 1 },
+    "小型サーマルドリル": { category: "違法物クラフト台", costYen: 2000, yield: 1 },
+    "犯罪用中型ドリル": { category: "違法物クラフト台", costYen: 1200, yield: 1 },
+    "ダイヤモンドドリルビット": { category: "違法物クラフト台", costYen: 50000, yield: 1 },
+    "小型グラインダー": { category: "違法物クラフト台", costYen: 500, yield: 1 },
+    "犯罪用中型カッター": { category: "違法物クラフト台", costYen: 800, yield: 1 },
 
-  // バッグ系
-  "小型バッグ": { category: "違法物クラフト台", costYen: 100, yield: 1 },
-  "犯罪用中型バッグ": { category: "違法物クラフト台", costYen: 500, yield: 1 },
-  "犯罪用大型バッグ": { category: "違法物クラフト台", costYen: 1000, yield: 1 },
+    // バッグ系
+    "小型バッグ": { category: "違法物クラフト台", costYen: 100, yield: 1 },
+    "犯罪用中型バッグ": { category: "違法物クラフト台", costYen: 500, yield: 1 },
+    "犯罪用大型バッグ": { category: "違法物クラフト台", costYen: 1000, yield: 1 },
 
-  // 電子機器系
-  "電子キット": { category: "違法物クラフト台", costYen: 0, yield: 1 },
-  "犯罪用USBメモリ 1.0": { category: "違法物クラフト台", costYen: 500, yield: 1 },
-  "犯罪用USBメモリ 2.0": { category: "違法物クラフト台", costYen: 600, yield: 1 },
-  "犯罪用ノートパソコングレード1": { category: "違法物クラフト台", costYen: 1500, yield: 1 },
-  "犯罪用ノートパソコングレード2": { category: "違法物クラフト台", costYen: 2000, yield: 1 },
+    // 電子機器系
+    "電子キット": { category: "違法物クラフト台", costYen: 0, yield: 1 },
+    "犯罪用USBメモリ 1.0": { category: "違法物クラフト台", costYen: 500, yield: 1 },
+    "犯罪用USBメモリ 2.0": { category: "違法物クラフト台", costYen: 600, yield: 1 },
+    "犯罪用ノートパソコングレード1": { category: "違法物クラフト台", costYen: 1500, yield: 1 },
+    "犯罪用ノートパソコングレード2": { category: "違法物クラフト台", costYen: 2000, yield: 1 },
 
-  // 侵入・解除ツール系
-  "ロックピック": { category: "違法物クラフト台", costYen: 0, yield: 1 },
-  "ビジネスバッグ用ロックピッカー": { category: "違法物クラフト台", costYen: 10000, yield: 1 },
-  "犯罪用のバール": { category: "違法物クラフト台", costYen: 600, yield: 1 },
-  "手錠の鍵": { category: "違法物クラフト台", costYen: 10000, yield: 1 },
+    // 侵入・解除ツール系
+    "ロックピック": { category: "違法物クラフト台", costYen: 0, yield: 1 },
+    "ビジネスバッグ用ロックピッカー": { category: "違法物クラフト台", costYen: 10000, yield: 1 },
+    "犯罪用のバール": { category: "違法物クラフト台", costYen: 600, yield: 1 },
+    "手錠の鍵": { category: "違法物クラフト台", costYen: 10000, yield: 1 },
 
-  // 素材・戦利品系
-  "貴金属": { category: "違法物クラフト台", costYen: 0, yield: 1 },
+    // 素材・戦利品系
+    "貴金属": { category: "違法物クラフト台", costYen: 0, yield: 1 },
 
-  /////////// ガンスミス
-  // 銃本体
-  "ピストル": { category: "ガンスミスワークベンチ", costYen: 100000, yield: 1 },
-  "Micro SMG": { category: "ガンスミスワークベンチ", costYen: 200000, yield: 1 },
+    /////////// ガンスミス
+    // 銃本体
+    "ピストル": { category: "ガンスミスワークベンチ", costYen: 100000, yield: 1 },
+    "Micro SMG": { category: "ガンスミスワークベンチ", costYen: 200000, yield: 1 },
 
-  // 防具
-  "頑丈な防弾チョッキ": { category: "ガンスミスワークベンチ", costYen: 50000, yield: 1 },
+    // 防具
+    "頑丈な防弾チョッキ": { category: "ガンスミスワークベンチ", costYen: 50000, yield: 1 },
 
-  // 投擲武器・特殊デバイス
-  "フラッシュバン": { category: "ガンスミスワークベンチ", costYen: 0, yield: 2 },
-  "スモークグレネード": { category: "ガンスミスワークベンチ", costYen: 0, yield: 2 },
-  "グレネード": { category: "ガンスミスワークベンチ", costYen: 0, yield: 2 },
-  "ポータブルEMPデバイス": { category: "ガンスミスワークベンチ", costYen: 0, yield: 2 },
+    // 投擲武器・特殊デバイス
+    "フラッシュバン": { category: "ガンスミスワークベンチ", costYen: 0, yield: 2 },
+    "スモークグレネード": { category: "ガンスミスワークベンチ", costYen: 0, yield: 2 },
+    "グレネード": { category: "ガンスミスワークベンチ", costYen: 0, yield: 2 },
+    "ポータブルEMPデバイス": { category: "ガンスミスワークベンチ", costYen: 0, yield: 2 },
 
-  // 弾薬
-  "9mm弾": { category: "ガンスミスワークベンチ", costYen: 0, yield: 100 },
-  ".45 ACP弾": { category: "ガンスミスワークベンチ", costYen: 63000, yield: 100 },
+    // 弾薬
+    "9mm弾": { category: "ガンスミスワークベンチ", costYen: 0, yield: 100 },
+    ".45 ACP弾": { category: "ガンスミスワークベンチ", costYen: 63000, yield: 100 },
 
-  // アタッチメント
-  "フラッシュライト": { category: "ガンスミスワークベンチ", costYen: 5000, yield: 1 },
-  "サプレッサー": { category: "ガンスミスワークベンチ", costYen: 5000, yield: 1 },
-  "タクティカルサプレッサー": { category: "ガンスミスワークベンチ", costYen: 5000, yield: 1 },
+    // アタッチメント
+    "フラッシュライト": { category: "ガンスミスワークベンチ", costYen: 5000, yield: 1 },
+    "サプレッサー": { category: "ガンスミスワークベンチ", costYen: 5000, yield: 1 },
+    "タクティカルサプレッサー": { category: "ガンスミスワークベンチ", costYen: 5000, yield: 1 },
 
-  /////////// 化学作業台
-  // 作業台（テーブル類）
-  "化学薬品クラフトテーブル": { category: "化学作業台", costYen: 50000000, yield: 1 },
-  "電子機器クラフトテーブル": { category: "化学作業台", costYen: 50000000, yield: 1 },
-  "武器クラフトテーブル": { category: "化学作業台", costYen: 50000000, yield: 1 },
+    /////////// 化学作業台
+    // 作業台（テーブル類）
+    "化学薬品クラフトテーブル": { category: "化学作業台", costYen: 50000000, yield: 1 },
+    "電子機器クラフトテーブル": { category: "化学作業台", costYen: 50000000, yield: 1 },
+    "武器クラフトテーブル": { category: "化学作業台", costYen: 50000000, yield: 1 },
 
-  // バッグ類
-  "バックパックLv1": { category: "化学作業台", costYen: 0, yield: 1 },
-  "バックパックLv2": { category: "化学作業台", costYen: 30000, yield: 1 },
-  "ダッフルバッグ": { category: "化学作業台", costYen: 100000, yield: 1 },
-  "弾薬バッグ": { category: "化学作業台", costYen: 10000, yield: 1 },
-  "お着替えバッグ": { category: "化学作業台", costYen: 0, yield: 1 },
+    // バッグ類
+    "バックパックLv1": { category: "化学作業台", costYen: 0, yield: 1 },
+    "バックパックLv2": { category: "化学作業台", costYen: 30000, yield: 1 },
+    "ダッフルバッグ": { category: "化学作業台", costYen: 100000, yield: 1 },
+    "弾薬バッグ": { category: "化学作業台", costYen: 10000, yield: 1 },
+    "お着替えバッグ": { category: "化学作業台", costYen: 0, yield: 1 },
 
-  // 医療・回復系
-  "医療キット": { category: "化学作業台", costYen: 10000, yield: 1 },
-  "包帯": { category: "化学作業台", costYen: 0, yield: 1 },
-  "サボテンクリーム": { category: "化学作業台", costYen: 0, yield: 1 },
+    // 医療・回復系
+    "医療キット": { category: "化学作業台", costYen: 10000, yield: 1 },
+    "包帯": { category: "化学作業台", costYen: 0, yield: 1 },
+    "サボテンクリーム": { category: "化学作業台", costYen: 0, yield: 1 },
 
-  // 武器パーツ
-  "ピストルボディ": { category: "化学作業台", costYen: 100000, yield: 1 },
-  "SMGボディ": { category: "化学作業台", costYen: 0, yield: 1 },
+    // 武器パーツ
+    "ピストルボディ": { category: "化学作業台", costYen: 100000, yield: 1 },
+    "SMGボディ": { category: "化学作業台", costYen: 0, yield: 1 },
 
-  // 接合剤・ケミカル類
-  "金属接合剤": { category: "化学作業台", costYen: 5000, yield: 1 },
-  "万能接合剤": { category: "化学作業台", costYen: 10000, yield: 1 },
+    // 接合剤・ケミカル類
+    "金属接合剤": { category: "化学作業台", costYen: 5000, yield: 1 },
+    "万能接合剤": { category: "化学作業台", costYen: 10000, yield: 1 },
 
-  // 素材・部品
-  "油": { category: "化学作業台", costYen: 0, yield: 1 },
-  "グラスファイバー": { category: "化学作業台", costYen: 0, yield: 1 },
-  "メタルブレード": { category: "化学作業台", costYen: 0, yield: 1 },
-  "鉄の歯車": { category: "化学作業台", costYen: 0, yield: 1 },
-  "鉄のバネ": { category: "化学作業台", costYen: 0, yield: 1 },
+    // 素材・部品
+    "油": { category: "化学作業台", costYen: 0, yield: 1 },
+    "グラスファイバー": { category: "化学作業台", costYen: 0, yield: 1 },
+    "メタルブレード": { category: "化学作業台", costYen: 0, yield: 1 },
+    "鉄の歯車": { category: "化学作業台", costYen: 0, yield: 1 },
+    "鉄のバネ": { category: "化学作業台", costYen: 0, yield: 1 },
 
-  // その他
-  "スプレー": { category: "化学作業台", costYen: 0, yield: 1 },
-  "スプレーリムーバー": { category: "化学作業台", costYen: 0, yield: 1 },
-  "ボイステープ": { category: "化学作業台", costYen: 0, yield: 1 },
-  "ダイヤモンド": { category: "化学作業台", costYen: 0, yield: 5 },
-  "車両引き換えゴールドチケット": { category: "化学作業台", costYen: 0, yield: 1 },
+    // その他
+    "スプレー": { category: "化学作業台", costYen: 0, yield: 1 },
+    "スプレーリムーバー": { category: "化学作業台", costYen: 0, yield: 1 },
+    "ボイステープ": { category: "化学作業台", costYen: 0, yield: 1 },
+    "ダイヤモンド": { category: "化学作業台", costYen: 0, yield: 5 },
+    "車両引き換えゴールドチケット": { category: "化学作業台", costYen: 0, yield: 1 },
 
-  /////////// 薬物製造台
-  "【麻薬】ブルーアウト": { category: "薬物製造台", costYen: 0, yield: 1 },
-  "【麻薬】レッドスペクター": { category: "薬物製造台", costYen: 0, yield: 1 },
-  "【麻薬】ホワイトマッド": { category: "薬物製造台", costYen: 0, yield: 1 },
-  "宝石店の合鍵": { category: "道具", super: false },
-  "204号室の鍵": { category: "道具", super: false },
-  "銃器（ショーケースを壊せるもの）": { category: "道具", super: false },
-};
+    /////////// 薬物製造台
+    "【麻薬】ブルーアウト": { category: "薬物製造台", costYen: 0, yield: 1 },
+    "【麻薬】レッドスペクター": { category: "薬物製造台", costYen: 0, yield: 1 },
+    "【麻薬】ホワイトマッド": { category: "薬物製造台", costYen: 0, yield: 1 },
+    "宝石店の合鍵": { category: "道具", super: false },
+    "204号室の鍵": { category: "道具", super: false },
+    "銃器（ショーケースを壊せるもの）": { category: "道具", super: false },
+  };
 
-// スーパー購入価格（1個あたり）
-const SHOP_PRICE = {
-  "アルミ粉": 10000,
-  "エメラルド": 10000,
-  "サファイア": 10000,
-  "ダイヤモンド": 10000,
+  // スーパー購入価格（1個あたり）
+  const SHOP_PRICE = {
+    "アルミ粉": 10000,
+    "エメラルド": 10000,
+    "サファイア": 10000,
+    "ダイヤモンド": 10000,
 
-  "メテオライトインゴット": 2000,
-  "金のインゴット": 10000,
-  "銀のインゴット": 10000,
+    "メテオライトインゴット": 2000,
+    "金のインゴット": 10000,
+    "銀のインゴット": 10000,
 
-  "鉄のインゴット": 2000,
-  "銅のインゴット": 10000,
-  "鋼鉄のインゴット": 10000,
+    "鉄のインゴット": 2000,
+    "銅のインゴット": 10000,
+    "鋼鉄のインゴット": 10000,
 
-  "小型グラインダー": 200000,
-  "小型サーマルドリル": 200000,
-  "小型ドリル": 200000,
+    "小型グラインダー": 200000,
+    "小型サーマルドリル": 200000,
+    "小型ドリル": 200000,
 
-  "小型バッグ": 200000,
-  "小型ロープ": 200000,
-};
+    "小型バッグ": 200000,
+    "小型ロープ": 200000,
+  };
 
 
-/* =======================
-   犯罪プリセット（ここを編集すれば増やせます）
-   - key: 犯罪名
-   - value: 必要な「道具（=このページのアイテム名）」: 個数
-   ※ 人数分が必要なもの（バッグ等）は、犯罪ページの「回数」を人数にして調整してください。
-======================= */
-const CRIMES = {
-  "小型 - 家強盗（空き巣）": {
-    "__NOTE__": "🛒 ポータブル溶接機：受注NPCから購入",
-    "__NOTE2__": "📍 受注場所：8012",
-    "__NOTE3__": "📍 換金場所：8012"
-  },
-  "小型 - コンビニ強盗": {
-    "__NOTE__": "銃器：店員NPCをダウンさせられる、レジを解放できるもの（コンビニ購入）"
-  },
-  "小型 - ATM強盗": {
-    methods: {
-      "ATM引き抜き強盗": {
-        "__NOTE__": "共通：人質を用意するなら銃器が必要、逃走車両もあると良い",
-        "小型ロープ": 1,
-        "車両（馬力の高い車。SUV推奨）": 1
-      },
-      "ドリル強盗": {
-        "__NOTE__": "共通：人質を用意するなら銃器が必要、逃走車両もあると良い",
-        "__NOTE2__": "小型ドリルはミニゲーム成功/失敗で消費",
-        "小型ドリル": 1
-      },
-      "爆弾強盗": {
-        "__NOTE__": "共通：人質を用意するなら銃器が必要、逃走車両もあると良い",
-        "犯罪用小型C4爆弾": 1
-      },
-      "ハッキング強盗": {
-        "__NOTE__": "共通：人質を用意するなら銃器が必要、逃走車両もあると良い",
-        "__NOTE2__": "USBはミニゲーム成功/失敗で消費",
-        "犯罪用USBメモリ 1.0": 1
+  /* =======================
+    犯罪プリセット（ここを編集すれば増やせます）
+    - key: 犯罪名
+    - value: 必要な「道具（=このページのアイテム名）」: 個数
+    ※ 人数分が必要なもの（バッグ等）は、犯罪ページの「回数」を人数にして調整してください。
+  ======================= */
+  const CRIMES = {
+    "小型 - 家強盗（空き巣）": {
+      "__NOTE__": "🛒 ポータブル溶接機：受注NPCから購入",
+      "__NOTE2__": "📍 受注場所：8012",
+      "__NOTE3__": "📍 換金場所：8012"
+    },
+
+    "小型 - コンビニ強盗": {
+      "__NOTE__": "銃器：店員NPCをダウンさせられる、レジを解放できるもの（コンビニ購入）"
+    },
+
+    "小型 - ATM強盗": {
+      methods: {
+        "ATM引き抜き強盗": {
+          "__NOTE__": "共通：人質を用意するなら銃器が必要、逃走車両もあると良い",
+          "小型ロープ": 1,
+          "車両（馬力の高い車。SUV推奨）": 1
+        },
+        "ドリル強盗": {
+          "__NOTE__": "共通：人質を用意するなら銃器が必要、逃走車両もあると良い",
+          "__NOTE2__": "小型ドリルはミニゲーム成功/失敗で消費",
+          "小型ドリル": 1
+        },
+        "爆弾強盗": {
+          "__NOTE__": "共通：人質を用意するなら銃器が必要、逃走車両もあると良い",
+          "犯罪用小型C4爆弾": 1
+        },
+        "ハッキング強盗": {
+          "__NOTE__": "共通：人質を用意するなら銃器が必要、逃走車両もあると良い",
+          "__NOTE2__": "USBはミニゲーム成功/失敗で消費",
+          "犯罪用USBメモリ 1.0": 1
+        }
       }
-    }
-  },
-  "小型 - フリーサ銀行強盗": {
-    "犯罪用USBメモリ 1.0": 1,
-    "犯罪用小型C4爆弾": 2,
-    "ダイヤモンド": 80
-  },
-  "小型 - 両替所強盗（Loud）": {
-    "__NOTE__": "🔑 両替所の鍵：ミッション中に入手",
-    "__NOTE2__": "🔫 銃器：必須",
+    },
 
-    "犯罪用USBメモリ 1.0": 1,
-    "犯罪用小型バッグ": 1,
-    "小型グラインダー": 3
-  },
-  "小型 - 両替所強盗（Silent）": {
-    "__NOTE__": "🔑 両替所の鍵：ミッション中に入手",
-    "__NOTE2__": "💾 復号化されたデバイス：ミッション中に入手",
-    "__NOTE3__": "🔫 銃器：必須",
+    "小型 - フリーサ銀行強盗": {
+      "犯罪用USBメモリ 1.0": 1,
+      "犯罪用小型C4爆弾": 2,
+      "ダイヤモンド": 80
+    },
 
-    "犯罪用USBメモリ 1.0": 1,
-    "犯罪用小型バッグ": 1,
-    "小型グラインダー": 2
-  },
-  "小型 - 輸送車両強盗": {
-    "小型バッグ": 1,
-    "小型ドリル": 2,
-    "犯罪用小型C4爆弾": 1
-  },
+    "小型 - 両替所強盗": {
+      methods: {
+        "Loud Approach": {
+          "__NOTE__": "🔑 両替所の鍵 ×1（ミッション中に入手）",
+          "__NOTE2__": "🔫 銃器：人質管理のために必要",
+
+          "犯罪用USBメモリ 1.0": 1,
+          "小型バッグ": 1,
+          "小型グラインダー": 3
+        },
+
+        "Silent Approach": {
+          "__NOTE__": "🔑 両替所の鍵 ×1（ミッション中に入手）",
+          "__NOTE2__": "💻 復号化されたデバイス ×1（ミッション中に入手）",
+          "__NOTE3__": "🔫 銃器：人質管理のために必要",
+
+          "犯罪用USBメモリ 1.0": 1,
+          "小型バッグ": 1,
+          "小型グラインダー": 2
+        }
+      }
+    },
+
+    "小型 - 輸送車両強盗": {
+      "小型バッグ": 1,
+      "小型ドリル": 2,
+      "犯罪用小型C4爆弾": 1
+    },
+
   "中型 - パレト銀行強盗": {
+
+    "__NOTE__": "📍 場所：1055",
+    "__NOTE2__": "🏦 中規模強盗ではあるものの、人質を取ることが可能な犯罪です",
+    "__NOTE3__": "⚠ USBメモリはミニゲーム成功・失敗に関係なく消費されます",
+
     "犯罪用ノートパソコン グレード2": 1,
     "犯罪用中型ドリル": 3,
     "犯罪用USBメモリ 2.0": 3
+
   },
-  "中型 - クルーザー強盗": {
-    "犯罪用USBメモリ 2.0": 2,
-    "犯罪用中型ドリル": 4
-  },
-  "中型 - 宝石店強盗": {
-    "宝石店の合鍵": 1,
-    "犯罪用のバール": 1,
-    "犯罪用中型カッター": 4,
-    "銃器（ショーケースを壊せるもの）": 1
-  },
-  "中型 - ボブキャット強盗（Loud）": {
-    "犯罪用ノートパソコン グレード2": 5,
-    "犯罪用のバール": 1,
-    "犯罪用中型C4爆弾": 3,
-    "犯罪用USBメモリ 2.0": 3,
-    "犯罪用中型バック": 1
-  },
-  "中型 - ボブキャット強盗（Silent）": {
-    "犯罪用ノートパソコン グレード2": 5,
-    "犯罪用のバール": 1,
-    "犯罪用中型C4爆弾": 1,
-    "犯罪用USBメモリ 2.0": 5,
-    "Smoke Grenade": 1,
-    "犯罪用中型バック": 1
-  },
-  "大型 - ユニオン銀行": {
-    "204号室の鍵": 1,
-    "犯罪用大型バッグ": 1,
-    "犯罪用大型C4爆弾": 8
-  }
+
+    "中型 - クルーザー強盗": {
+
+      "__NOTE__": "🚢 船上で「犯罪用USBメモリ 2.0」を使用すると犯罪開始",
+      "__NOTE2__": "💀 船上に出現するNPCを殲滅しながら報酬を回収",
+      "__NOTE3__": "🛠 USBメモリは金庫のミニゲームを失敗しても消費",
+
+      "犯罪用USBメモリ 2.0": 2,
+      "犯罪用中型ドリル": 4
+
+    },
+
+    "中型 - 宝石店強盗": {
+
+      "__NOTE__": "📍 場所：7251",
+      "__NOTE2__": "🔫 銃器：ショーケースを壊せるもの",
+
+      "宝石店の合鍵": 1,
+      "犯罪用のバール": 1,
+      "犯罪用中型カッター": 4,
+      "銃器（ショーケースを壊せるもの）": 1
+
+    },
+    
+    "大型 - ボブキャット強盗": {
+
+      methods: {
+
+        "Loud Approach": {
+
+          "__NOTE__": "📍 場所：9274",
+          "__NOTE2__": "💰 犯罪用中型バッグ ×1（回収者の人数分）",
+
+          "犯罪用ノートパソコングレード2": 5,
+          "犯罪用のバール": 1,
+          "犯罪用中型C4爆弾": 3,
+          "犯罪用USBメモリ 2.0": 3,
+          "犯罪用中型バッグ": 1
+        },
+
+        "Silent Approach": {
+
+          "__NOTE__": "📍 場所：9274",
+          "__NOTE2__": "💰 犯罪用中型バッグ ×1（回収者の人数分）",
+
+          "犯罪用ノートパソコングレード2": 5,
+          "犯罪用のバール": 1,
+          "犯罪用中型C4爆弾": 1,
+          "犯罪用USBメモリ 2.0": 5,
+          "スモークグレネード": 1,
+          "犯罪用中型バッグ": 1
+        }
+
+      }
+
+    },
+
+    "大型 - ユニオン銀行": {
+
+      "__NOTE__": "📍 受注場所：7112番 204号室",
+      "__NOTE2__": "👤 金持ち役の人は必ず受注者に同行して受注場所に向かう",
+      "__NOTE3__": "💰 犯罪用大型バッグ ×回収人数分（回収者それぞれが1つ所持）",
+      "__NOTE4__": "⚠️ 注意：受注直前に全員必ずリログしてください",
+
+      "204号室の鍵": 1,
+      "犯罪用大型バッグ": 1,
+      "犯罪用大型C4爆弾": 8
+
+    },
 };
 
 function getCrimeReq(crimeName, methodName){
@@ -938,6 +1088,112 @@ const selectedCrimes = []; // [{name, times}]
 let crimeRequiredSet = new Set();
 let currentPage = "craft";
        // altChoice["貴金属"]=0 など
+
+/* =======================
+   入力保持（localStorage）
+======================= */
+const LS_KEY = "craft_crime_state_v1";
+
+function loadState(){
+  try { return JSON.parse(localStorage.getItem(LS_KEY) || "{}"); }
+  catch(e){ return {}; }
+}
+
+function saveStateDebounced(){
+  clearTimeout(saveStateDebounced._t);
+  saveStateDebounced._t = setTimeout(() => {
+    const payload = {
+      // craft
+      currentCategory,
+      counts,
+      favorites: Array.from(favorites),
+      altChoice,
+      // UI
+      craftUI: {
+        search: searchBox?.value || "",
+        showOnlyFav: !!showOnlyFav?.checked,
+        showOnlyEntered: !!showOnlyEntered?.checked,
+        pinEntered: !!pinEntered?.checked,
+      },
+
+      // crime
+      crimeUI: {
+        crimeSelect: crimeSelect?.value || "",
+        crimeMethod: crimeMethod?.classList.contains("hidden") ? "" : (crimeMethod?.value || ""),
+        crimeTimes: Number(crimeTimes?.value || 1) || 1,
+        includeMaterials: !!crimeIncludeMaterials?.checked,
+        singleMode: !!crimeSingleMode?.checked,
+        selectedCrimes, // 複数追加してるならこれを保存するのが一番自然
+      },
+
+      currentPage
+    };
+
+    localStorage.setItem(LS_KEY, JSON.stringify(payload));
+  }, 200);
+}
+
+function restoreState(){
+  const st = loadState();
+
+  // craft状態
+  if (st.currentCategory) currentCategory = st.currentCategory;
+
+  if (st.counts && typeof st.counts === "object") {
+    for (const [k,v] of Object.entries(st.counts)) counts[k] = Number(v) || 0;
+  }
+
+  favorites.clear();
+  if (Array.isArray(st.favorites)) st.favorites.forEach(x => favorites.add(x));
+
+  if (st.altChoice && typeof st.altChoice === "object") {
+    for (const [k,v] of Object.entries(st.altChoice)) altChoice[k] = v;
+  }
+
+  // craft UI
+  if (st.craftUI) {
+    if (searchBox) searchBox.value = st.craftUI.search || "";
+    if (showOnlyFav) showOnlyFav.checked = !!st.craftUI.showOnlyFav;
+    if (showOnlyEntered) showOnlyEntered.checked = !!st.craftUI.showOnlyEntered;
+    if (pinEntered) pinEntered.checked = !!st.craftUI.pinEntered;
+  }
+
+  // crime UI
+  if (st.crimeUI) {
+    if (crimeIncludeMaterials) crimeIncludeMaterials.checked = !!st.crimeUI.includeMaterials;
+    if (crimeSingleMode) crimeSingleMode.checked = !!st.crimeUI.singleMode;
+    if (crimeTimes) crimeTimes.value = String(st.crimeUI.crimeTimes || 1);
+
+    // 選択中プリセット
+    if (crimeSelect && st.crimeUI.crimeSelect) crimeSelect.value = st.crimeUI.crimeSelect;
+
+    // methodsの有無を反映
+    updateCrimeDotPreview();
+    updateMethodSelect();
+
+    // 方法
+    if (crimeMethod && st.crimeUI.crimeMethod && !crimeMethod.classList.contains("hidden")) {
+      crimeMethod.value = st.crimeUI.crimeMethod;
+    }
+
+    // 複数追加の状態
+    if (Array.isArray(st.crimeUI.selectedCrimes)) {
+      selectedCrimes.length = 0;
+      st.crimeUI.selectedCrimes.forEach(x => {
+        if (!x?.name) return;
+        selectedCrimes.push({
+          name: x.name,
+          method: x.method ?? null,
+          times: Math.max(1, Number(x.times || 1) || 1),
+        });
+      });
+    }
+  }
+
+  // 最後に開いてたページ
+  if (st.currentPage) currentPage = st.currentPage;
+}
+
 
 /* =======================
    DOM
@@ -1402,11 +1658,21 @@ function renderCrimePlan(){
 
   // NOTE取得（複数NOTE対応）
   const notes = selectedCrimes.flatMap(c => {
-  const crime = CRIMES[c.name] || {};
-  return Object.entries(crime)
-    .filter(([k,v]) => k.startsWith("__NOTE") && v)
-    .sort(([a],[b]) => a.localeCompare(b, "ja"))
-    .map(([k,v]) => String(v));
+    const crimeBase = CRIMES[c.name] || {};
+
+      // method選択がある場合はそっちを優先
+      let crime = crimeBase;
+
+      if (crimeBase.methods && c.method && crimeBase.methods[c.method]) {
+        crime = crimeBase.methods[c.method];
+      }
+
+        // NOTE抽出
+        return Object.entries(crime)
+          .filter(([k,v]) => k.startsWith("__NOTE") && v)
+          .sort(([a],[b]) => a.localeCompare(b, "ja"))
+          .map(([k,v]) => String(v));
+
   });
   
   const lines = Object.entries(totals)
@@ -1503,15 +1769,27 @@ function setPage(mode){
   if (tabCrime) tabCrime.classList.toggle("active", isCrime);
 
   if (isCrime){
-    if (crimeSingleMode?.checked && crimeSelect?.value){
-      selectedCrimes.length = 0;
-      selectedCrimes.push({ name: crimeSelect.value, times: Math.max(1, Number(crimeTimes?.value || 1) || 1) });
-    }
-    renderCrimePlan();
-    renderCrimeItems();
+    updateCrimeDotPreview();
+    updateMethodSelect();
+
+  // ★復元済み（selectedCrimesがある）なら上書きしない
+  if (!selectedCrimes.length && crimeSingleMode?.checked && crimeSelect?.value){
+    selectedCrimes.push({
+      name: crimeSelect.value,
+      method: crimeMethod?.classList.contains("hidden") ? null : (crimeMethod?.value || null),
+      times: Math.max(1, Number(crimeTimes?.value || 1) || 1),
+    });
+  }
+
+  renderCrimePlan();
+  renderCrimeItems();
+
   } else {
     renderItems();
   }
+
+  saveStateDebounced();
+
 }
 
 function renderResults(){
@@ -1526,6 +1804,14 @@ function renderResults(){
   // ALTアイテム自身は素材一覧から消す（代替欄で見える）
   for (const altItem of Object.keys(ALT_RECIPES)) {
     if (totals[altItem]) delete totals[altItem];
+  }
+
+  // 必要素材（合計）
+  const entries = Object.entries(totals).sort((a,b)=> b[1]-a[1]);
+  if (matsEl) {
+    matsEl.innerHTML = entries.length
+      ? entries.map(([k,v]) => `<div class="kv"><span>${k}</span><b>${v}</b></div>`).join("")
+      : `<div class="muted">まだ入力がありません</div>`;
   }
 
   // クラフト料金合計
@@ -1558,14 +1844,6 @@ function renderResults(){
       ? itemsShop.lines.map(x => `・${x.name}：<b>${fmtYen(x.yen)}円</b>`).join("<br>")
       : "・（スーパー購入対象なし）";
     shopItemsBreakdownEl.innerHTML = s2;
-  }
-
-  // 必要素材（合計）
-  const entries = Object.entries(totals).sort((a,b)=> b[1]-a[1]);
-  if (matsEl) {
-    matsEl.innerHTML = entries.length
-      ? entries.map(([k,v]) => `<div class="kv"><span>${k}</span><b>${v}</b></div>`).join("")
-      : `<div class="muted">まだ入力がありません</div>`;
   }
 
   // 代替レシピ表示（手動選択）
@@ -1671,10 +1949,10 @@ if (addCrimeBtn) addCrimeBtn.addEventListener("click", () => {
 });
 if (clearCrimeBtn) clearCrimeBtn.addEventListener("click", () => clearCrimePlan());
 
-if (searchBox) searchBox.addEventListener("input", () => renderItems());
-if (showOnlyFav) showOnlyFav.addEventListener("change", () => renderItems());
-if (showOnlyEntered) showOnlyEntered.addEventListener("change", () => renderItems());
-if (pinEntered) pinEntered.addEventListener("change", () => renderItems());
+if (searchBox) searchBox.addEventListener("input", () => { renderItems(); saveStateDebounced(); });
+if (showOnlyFav) showOnlyFav.addEventListener("change", () => { renderItems(); saveStateDebounced(); });
+if (showOnlyEntered) showOnlyEntered.addEventListener("change", () => { renderItems(); saveStateDebounced(); });
+if (pinEntered) pinEntered.addEventListener("change", () => { renderItems(); saveStateDebounced(); });
 if (resetBtn) {
   resetBtn.addEventListener("click", () => {
     if (!confirm("入力をすべてリセットしますか？")) return;
@@ -1684,6 +1962,7 @@ if (resetBtn) {
     }
 
     renderItems();
+    saveStateDebounced();
   });
 }
 
@@ -1692,9 +1971,19 @@ if (resetBtn) {
    初期表示
 ======================= */
 renderCrimeSelect();
-setPage("craft");
+
+// ★ 追加：復元（描画前）
+restoreState();
+
+// ★ 最後に開いてたページを優先
+setPage(currentPage || "craft");
+
 renderCategorySeg();
 renderItems();
+
+// ★ 初回描画後に保存（念のため）
+saveStateDebounced();
+
 </script>
 </body>
 </html>
