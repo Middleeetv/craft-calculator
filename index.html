@@ -431,6 +431,81 @@
       padding:0 10px;
     }
 
+    /* =========================
+   犯罪ページ：必要道具一覧の見た目改善
+      ========================= */
+      #crimeItems .item{
+        padding:10px 12px;
+        border:1px solid rgba(255,255,255,.10);
+        border-radius:14px;
+        background:rgba(255,255,255,.02);
+      }
+
+      #crimeItems .item:hover{
+        background:rgba(255,255,255,.035);
+      }
+
+      /* 左側（アイテム名＋カテゴリ） */
+      #crimeItems .item .meta{
+        gap:6px;
+      }
+
+      /* アイテム名：大きく・太く */
+      #crimeItems .item .name{
+        font-size:14px;
+        font-weight:800;
+        color:var(--text);
+      }
+
+      /* 下のカテゴリ（クラフト台）：小さく・薄く */
+      #crimeItems .item .muted{
+        font-size:11px;
+        color:var(--muted);
+        opacity:.9;
+      }
+
+      /* 右側の個数：中央寄せ＆大きく、右寄りすぎを解消 */
+      #crimeItems .item .qty{
+        min-width:54px;
+        text-align:center;        /* ←右寄せやめる */
+        font-size:16px;
+        font-weight:900;
+        color:var(--warn);
+        padding:6px 10px;
+        border-radius:12px;
+        background:rgba(255,204,102,.08);   /* 薄い色付き */
+        border:1px solid rgba(255,204,102,.22);
+      }
+
+      /* ===== クラフトツリー ===== */
+
+        .tree{
+          font-size:13px;
+          line-height:1.6;
+        }
+
+        .tree details{
+          margin-left:10px;
+          border-left:1px dashed rgba(255,255,255,.15);
+          padding-left:10px;
+        }
+
+        .tree summary{
+          cursor:pointer;
+          font-weight:600;
+        }
+
+        .tree .treeItem{
+          display:flex;
+          justify-content:space-between;
+          gap:10px;
+        }
+
+        .tree .treeQty{
+          color:#6ea8fe;
+          font-weight:700;
+        }
+        
   </style>
 </head>
 <body>
@@ -447,16 +522,35 @@
   <!-- LEFT -->
   <div class="card">
     <div class="toolbar">
-      <div class="seg" id="categorySeg"></div>
 
-      <div class="search">
-        <input id="searchBox" type="text" placeholder="検索（例：バッグ / 弾 / ドリル）" />
+      <!-- 1行目：カテゴリ -->
+      <div class="toolbar-row toolbar-row-1">
+        <div class="seg" id="categorySeg"></div>
       </div>
 
-      <label class="chip"><input id="showOnlyFav" type="checkbox" /> お気に入りだけ</label>
-      <label class="chip"><input id="showOnlyEntered" type="checkbox" /> 入力中だけ表示</label>
-      <label class="chip"><input id="pinEntered" type="checkbox" checked /> 入力済みを上へ</label>
-      <button id="resetBtn" class="chip" type="button">入力リセット</button>
+      <!-- 2行目：検索 -->
+      <div class="toolbar-row toolbar-row-2">
+        <div class="search">
+          <input id="searchBox" placeholder="検索（例：バッグ / 弾 / ドリル）">
+        </div>
+      </div>
+
+      <!-- 3行目：チェックボックスとボタン -->
+      <div class="toolbar-row toolbar-row-3">
+        <label class="chip">
+          <input id="showOnlyFav" type="checkbox"> お気に入りだけ
+        </label>
+
+        <label class="chip">
+          <input id="showOnlyEntered" type="checkbox"> 入力中だけ表示
+        </label>
+
+        <label class="chip">
+          <input id="pinEntered" type="checkbox"> 入力済みを上へ
+        </label>
+
+        <button id="resetBtn" class="chip">入力リセット</button>
+      </div>
 
     </div>
 
@@ -477,6 +571,11 @@
       <div class="box">
         <div class="secTitle">必要素材（合計）</div>
         <div id="materials"></div>
+      </div>
+
+      <div class="box" id="craftTreeBox">
+          <div class="secTitle">クラフト内訳（ツリー）</div>
+          <div id="craftTree" class="tree"></div>
       </div>
 
       <div class="box">
@@ -539,6 +638,11 @@
     <button id="addCrimeBtn" class="chip" type="button">（複数用）追加</button>
 
     <button id="clearCrimeBtn" class="chip" type="button">セットクリア</button>
+
+    <button id="applyCrimeToCraftBtn" class="chip" type="button">クラフトへ反映</button>
+
+    <button id="applyCrimeToCraftAddBtn" class="chip" type="button">追加で反映</button>
+
   </div>
 
   <!-- 注意文 -->
@@ -585,7 +689,8 @@
     "違法物クラフト台",
     "ガンスミスワークベンチ",
     "化学作業台",
-    "薬物製造台"
+    "薬物製造台",
+    "合鍵作成台"
   ];
 
   const RECIPES = {
@@ -661,6 +766,10 @@
     "【麻薬】ブルーアウト": { "ブルーフラワー": 1, "金のインゴット": 1 },
     "【麻薬】レッドスペクター": { "レッドフラワー": 1, "銅のインゴット": 1 },
     "【麻薬】ホワイトマッド": { "ホワイトフラワー": 1, "銀のインゴット": 1 },
+
+    // 合鍵作成台
+    "宝石店の合鍵": { "犯罪用ノートパソコングレード2": 1, "犯罪用中型テルミット爆弾": 1, "貴金属": 1, "金属接合剤": 1 },
+    "204号室の鍵": { "万能接合剤": 2, "犯罪用大型C4爆弾": 1, "犯罪用大型ドリル": 1 },
   };
 
   const IMAGE_MAP = {
@@ -730,7 +839,11 @@
 
     "【麻薬】ブルーアウト": "drug_blueout.png",
     "【麻薬】レッドスペクター": "drug_redspecter.png",
-    "【麻薬】ホワイトマッド": "drug_whitemud.png"
+    "【麻薬】ホワイトマッド": "drug_whitemud.png",
+
+    "宝石店の合鍵": "handcuff_key.png",
+    "204号室の鍵": "handcuff_key.png",
+
   };
 
   function getImagePath(itemName) {
@@ -858,14 +971,16 @@
     "ボイステープ": { category: "化学作業台", costYen: 0, yield: 1 },
     "ダイヤモンド": { category: "化学作業台", costYen: 0, yield: 5 },
     "車両引き換えゴールドチケット": { category: "化学作業台", costYen: 0, yield: 1 },
+    "銃器（ショーケースを壊せるもの）": { category: "道具", super: false },
 
-    /////////// 薬物製造台
+    // 薬物製造台
     "【麻薬】ブルーアウト": { category: "薬物製造台", costYen: 0, yield: 1 },
     "【麻薬】レッドスペクター": { category: "薬物製造台", costYen: 0, yield: 1 },
     "【麻薬】ホワイトマッド": { category: "薬物製造台", costYen: 0, yield: 1 },
-    "宝石店の合鍵": { category: "道具", super: false },
-    "204号室の鍵": { category: "道具", super: false },
-    "銃器（ショーケースを壊せるもの）": { category: "道具", super: false },
+
+    //合鍵作成台
+    "宝石店の合鍵": { category: "合鍵作成台", costYen: 0, yield: 1 },
+    "204号室の鍵": { category: "合鍵作成台", costYen: 0, yield: 1 },
   };
 
   // スーパー購入価格（1個あたり）
@@ -1305,6 +1420,38 @@ const shopItemsTotalEl = $("shopItemsTotal");
 const shopItemsBreakdownEl = $("shopItemsBreakdown");
 
 const altDetails = $("altDetails");
+
+function applyCrimeToCraft({ mode = "replace" } = {}){
+  // 犯罪で必要な「道具」合計（回数反映済み）
+  const crimeTotals = computeCrimeTotals(); // { itemName: qty }
+
+  // counts初期化 or 追加
+  if (mode === "replace"){
+    for (const k of Object.keys(counts)) counts[k] = 0;
+  }
+
+  // crimeTotalsのうち、クラフト可能（METAにいる）なものだけ反映
+  for (const [name, qty] of Object.entries(crimeTotals)){
+    const q = Number(qty || 0);
+    if (q <= 0) continue;
+
+    // ここが重要：METAに存在する=クラフト側に表示できる
+    if (!META[name]) continue;
+
+    counts[name] = (mode === "add")
+      ? (Number(counts[name] || 0) + q)
+      : q;
+  }
+
+  // クラフト側に移動して再描画
+  setPage("craft");
+  renderCategorySeg();
+  renderItems();
+  renderResults();
+
+  // localStorage保存（入れてるなら）
+  if (typeof saveStateDebounced === "function") saveStateDebounced();
+}
 
 /* =======================
    ユーティリティ
@@ -1893,7 +2040,71 @@ function renderResults(){
   // 右上メモ
   const enteredCount = Object.values(counts).filter(v => (v||0) > 0).length;
   if (resultNote) resultNote.textContent = enteredCount ? `入力中：${enteredCount}件` : "";
+
+  renderCraftTree();
+
 }
+
+function buildCraftTree(itemName, qty, depth = 0, visited = new Set()){
+  // ループ防止
+  const key = `${itemName}`;
+  if (visited.has(key)) return "";
+  visited.add(key);
+
+  const recipe = RECIPES[itemName];
+  if (!recipe) return ""; // レシピなしはツリー化しない（親側でleaf表示）
+
+  let html = `<details ${depth===0 ? "open" : ""}>
+    <summary>
+      <div class="treeItem">
+        <span>${itemName}</span>
+        <span class="treeQty">×${qty}</span>
+      </div>
+    </summary>
+  `;
+
+  for (const [mat, per] of Object.entries(recipe)){
+    const total = per * qty;
+
+    // mat がクラフト可能なら「行」じゃなくてそのまま子ノードにする
+    if (RECIPES[mat]) {
+      html += buildCraftTree(mat, total, depth + 1, new Set(visited));
+    } else {
+      html += `
+        <div class="treeItem" style="margin-left:10px;">
+          <span>${mat}</span>
+          <span class="treeQty">×${total}</span>
+        </div>
+      `;
+    }
+  }
+
+  html += `</details>`;
+  return html;
+}
+
+
+    function renderCraftTree(){
+  const el = document.getElementById("craftTree");
+  if (!el) return;
+
+  const roots = Object.entries(counts)
+    .filter(([_, qty]) => (qty || 0) > 0)
+    // 表示順を安定させる（任意：名前順）
+    .sort(([a],[b]) => a.localeCompare(b, "ja"));
+
+  const chunks = [];
+  for (const [item, qty] of roots){
+    if (!RECIPES[item]) continue;      // レシピがある完成品だけツリー化
+    chunks.push(buildCraftTree(item, qty));
+  }
+
+  el.innerHTML = chunks.length
+    ? chunks.join("")
+    : `<div class="muted">（まだ入力がありません）</div>`;
+}
+
+
 
 /* =======================
    イベント
@@ -1948,6 +2159,25 @@ if (addCrimeBtn) addCrimeBtn.addEventListener("click", () => {
   renderCrimeItems();
 });
 if (clearCrimeBtn) clearCrimeBtn.addEventListener("click", () => clearCrimePlan());
+
+/* =======================
+   ★ クラフトへ反映ボタン
+======================= */
+
+const applyCrimeToCraftBtn = $("applyCrimeToCraftBtn");
+const applyCrimeToCraftAddBtn = $("applyCrimeToCraftAddBtn");
+
+if (applyCrimeToCraftBtn){
+  applyCrimeToCraftBtn.addEventListener("click", () => {
+    applyCrimeToCraft({ mode: "replace" });
+  });
+}
+
+if (applyCrimeToCraftAddBtn){
+  applyCrimeToCraftAddBtn.addEventListener("click", () => {
+    applyCrimeToCraft({ mode: "add" });
+  });
+}
 
 if (searchBox) searchBox.addEventListener("input", () => { renderItems(); saveStateDebounced(); });
 if (showOnlyFav) showOnlyFav.addEventListener("change", () => { renderItems(); saveStateDebounced(); });
